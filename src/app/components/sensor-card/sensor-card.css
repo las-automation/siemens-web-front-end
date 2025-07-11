@@ -1,0 +1,55 @@
+/* Ficheiro: src/app/components/sensor-card/sensor-card.component.css */
+.card-container {
+  background-color: #E0E0E0; /* Cinza claro de fundo */
+  border-radius: 8px;
+  padding: 10px;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.card-header p {
+  margin: 0;
+  font-weight: bold;
+  color: #333;
+}
+.card-body {
+  display: flex;
+  justify-content: center;
+  align-items: baseline;
+  background-color: #F5F5F5;
+  padding: 15px 10px;
+  margin: 5px 0;
+  border-radius: 4px;
+}
+.valor {
+  font-size: 2em;
+  font-weight: bold;
+  color: #000;
+}
+.unidade {
+  font-size: 1.2em;
+  font-weight: bold;
+  margin-left: 8px;
+  color: #555;
+}
+.status-bar {
+  height: 25px;
+  border-radius: 4px;
+  color: white;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: uppercase;
+  font-size: 0.9em;
+}
+/* Classes de estado */
+.status-bar.normal {
+  background-color: #BDBDBD; /* Cinza para o estado normal */
+}
+.status-bar.atenção {
+  background-color: #FFC107; /* Amarelo */
+}
+.status-bar.alarme {
+  background-color: #D83933; /* Vermelho */
+}

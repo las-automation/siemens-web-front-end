@@ -1,0 +1,8 @@
+/* Ficheiro: src/app/pages/dashboard/dashboard.component.css */
+.dashboard-grid {
+  display: grid;
+  /* Cria uma grelha flexível que se adapta ao tamanho do ecrã */
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 25px; /* Espaçamento entre os cards */
+  padding: 25px;
+}

@@ -1,0 +1,14 @@
+<!-- Ficheiro: src/app/components/sensor-card/sensor-card.component.html -->
+<div class="card-container">
+  <div class="card-header">
+    <p>{{ dadosDoSensor.nome }}</p>
+  </div>
+  <div class="card-body">
+    <span class="valor">{{ dadosDoSensor.valor.toFixed(2) }}</span>
+    <span class="unidade">{{ dadosDoSensor.unidade }}</span>
+  </div>
+  <!-- Usamos [ngClass] para aplicar uma classe CSS dinâmica com base no estado do sensor -->
+  <div class="status-bar" [ngClass]="dadosDoSensor.estado.toLowerCase()">
+    <span *ngIf="dadosDoSensor.estado !== 'Normal'">{{ dadosDoSensor.estado }}</span>
+  </div>
+</div>
