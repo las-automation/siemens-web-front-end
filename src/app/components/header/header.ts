@@ -17,6 +17,7 @@ export class HeaderComponent {
   // Isto torna o nosso HTML mais limpo e fácil de manter.
   navLinks = [
     { path: 'dashboard', label: 'Dashboard' },
-    { path: 'relatorios', label: 'Relatórios' }
+    { path: 'relatorios', label: 'Relatório Diário' }, // Cambiamos o nome para maior claridade
+    { path: 'historico-relatorios', label: 'Histórico' }
   ];
 }

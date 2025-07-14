@@ -1,1 +1,47 @@
-<p>daily-report works!</p>
+<!-- Ficheiro: src/app/pages/daily-report/daily-report.html -->
+<div class="report-container">
+  <h1>Relatório Diário de Produção</h1>
+  <p class="report-date">Data: 14 de Julho de 2025</p>
+
+  <!-- Secção de KPIs com Cards (continua igual) -->
+  <div class="kpi-grid">
+    <!-- ... os seus mat-card continuam aqui ... -->
+  </div>
+
+  <!-- Tabela com os dados detalhados -->
+  <h2>Detalhes por Máquina</h2>
+  <table mat-table [dataSource]="reportData" class="mat-elevation-z8">
+
+    <!-- Colunas existentes (nome, horas, consumo, eficiência) continuam aqui -->
+    <ng-container matColumnDef="nomeMaquina">
+      <th mat-header-cell *matHeaderCellDef> Máquina </th>
+      <td mat-cell *matCellDef="let element"> {{element.nomeMaquina}} </td>
+    </ng-container>
+    <!-- ... outras colunas ... -->
+
+    <!-- NOVA COLUNA: Dias Trabalhando -->
+    <ng-container matColumnDef="diasTrabalhados">
+      <th mat-header-cell *matHeaderCellDef> Dias Operando </th>
+      <td mat-cell *matCellDef="let element"> {{element.diasTrabalhados}} </td>
+    </ng-container>
+
+    <!-- NOVA COLUNA: Próxima Manutenção com barra visual -->
+    <ng-container matColumnDef="proximaManutencao">
+      <th mat-header-cell *matHeaderCellDef> Próx. Manutenção </th>
+      <td mat-cell *matCellDef="let element">
+        <div class="manutencao-container">
+          <span>{{element.proximaManutencao}} dias</span>
+          <div class="progress-bar-background">
+            <div class="progress-bar-fill"
+                 [style.width.%]="(element.proximaManutencao / 90) * 100"
+                 [ngClass]="getManutencaoStatus(element.proximaManutencao)">
+            </div>
+          </div>
+        </div>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  </table>
+</div>
