@@ -39,31 +39,7 @@
   cursor: pointer;
   font-weight: bold;
 }
-
-.secondary-nav {
-  display: flex;
-  justify-content: flex-start;
-  padding: 0 30px;
-  background-color: #fff;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.nav-item {
-  color: #333;
-  text-decoration: none;
-  padding: 12px 18px;
-  font-weight: 500;
-  border-bottom: 3px solid transparent;
-  transition: color 0.2s, border-color 0.2s;
-}
-
-.nav-item:hover {
-  color: #005A9C;
-}
-
-.nav-item.active {
-  color: #D83933; /* Vermelho do seu design */
-  font-weight: bold;
-  background-color: #FEE; /* Um fundo rosa claro para destacar */
-  border-bottom-color: #D83933;
+/* NOVO: Personaliza a cor da barra indicadora da aba ativa */
+:host ::ng-deep .mat-mdc-tab-link.mdc-tab--active .mdc-tab-indicator__content--underline {
+  border-color: #D83933 !important; /* Vermelho do seu design */
 }
