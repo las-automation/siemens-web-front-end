@@ -10,13 +10,17 @@
       <button class="create-button">Criar</button>
     </div>
   </div>
-  <nav class="secondary-nav">
-    <a href="#" class="nav-item">Lavagem de Biodiesel</a>
-    <a href="#" class="nav-item active">Flash do Biodiesel</a>
-    <a href="#" class="nav-item">Secagem</a>
-    <a href="#" class="nav-item">Glicerólise</a>
-    <a href="#" class="nav-item">Planta 2</a>
-    <a href="#" class="nav-item">Receita</a>
-    <!-- Adicione os outros links conforme o design -->
+ <nav mat-tab-nav-bar [tabPanel]="tabPanel">
+    <!-- Usamos @for para criar um link para cada item no nosso array navLinks -->
+    @for (link of navLinks; track link.path) {
+      <a mat-tab-link
+         [routerLink]="link.path"
+         routerLinkActive #rla="routerLinkActive"
+         [active]="rla.isActive">
+        {{ link.label }}
+      </a>
+    }
   </nav>
+  <!-- Este painel é necessário para a barra de abas funcionar, mas não será visível -->
+  <mat-tab-nav-panel #tabPanel></mat-tab-nav-panel>
 </header>
