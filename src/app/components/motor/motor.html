@@ -1,0 +1,9 @@
+<div class="motor-container" [ngClass]="dadosDoMotor.estado.toLowerCase()" (click)="mostrarDetalhes()">
+  <p class="estado-label">{{ dadosDoMotor.estado }}</p>
+  <!-- Ícone SVG simples de um motor -->
+  <svg viewBox="0 0 100 80" class="motor-icon">
+    <rect x="10" y="20" width="80" height="50" rx="5" class="motor-body" />
+    <rect x="30" y="10" width="40" height="10" class="motor-top" />
+    <rect x="5" y="70" width="90" height="5" class="motor-base" />
+  </svg>
+</div>
