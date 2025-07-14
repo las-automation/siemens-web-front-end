@@ -1,0 +1,13 @@
+<!-- Ficheiro: src/app/components/modal/modal.component.html -->
+@if (displayState$ | async; as modal) {
+  @if (modal.isOpen) {
+    <div class="modal-overlay" (click)="closeModal()">
+      <div class="modal-content" (click)="$event.stopPropagation()">
+        <button class="close-button" (click)="closeModal()">×</button>
+        <!-- O título e a mensagem agora são dinâmicos -->
+        <h2>{{ modal.title }}</h2>
+        <p>{{ modal.message }}</p>
+      </div>
+    </div>
+  }
+}

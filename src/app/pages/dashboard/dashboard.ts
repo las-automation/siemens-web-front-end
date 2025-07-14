@@ -3,11 +3,17 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SensorCardComponent } from '../../components/sensor-card/sensor-card';
 import { MachineStatusPanelComponent } from '../../components/machine-status-panel/machine-status-panel';
-
+import { ModalService } from '../../services/modal';
+import { MotorComponent } from '../../components/motor/motor';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, SensorCardComponent, MachineStatusPanelComponent], // Importamos os nossos componentes
+  imports: [
+    CommonModule,
+    SensorCardComponent,
+    MachineStatusPanelComponent,
+    MotorComponent
+  ], // Importamos os nossos componentes
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css'
 })
@@ -32,4 +38,16 @@ export class DashboardComponent {
     { nome: 'Prensa 05', horasTrabalhadas: '00:00:00', diasTrabalhados: 0 },
     { nome: 'Prensa 06', horasTrabalhadas: '00:00:00', diasTrabalhados: 0 }
   ];
+
+  sensor_teste = [
+    {nome: 'Corrente', valor: 23.00, unidade: 'Amp', estado: 'Normal'}
+  ]
+  motores = [
+    { id: 'MTR-01', estado: 'Bloqueado', mensagemAlerta: 'Falha no disjuntor principal. Verifique a alimentação.' },
+    { id: 'MTR-02', estado: 'Alerta', mensagemAlerta: 'Temperatura do rolamento acima do limite. Manutenção preventiva recomendada.' },
+    { id: 'MTR-03', estado: 'Normal', mensagemAlerta: '' }
+  ];
+
+
+
 }
