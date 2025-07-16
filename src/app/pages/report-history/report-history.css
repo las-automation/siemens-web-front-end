@@ -1,0 +1,19 @@
+.history-container{
+    padding:25px;
+    max-width:1200px;
+    margin:auto
+}
+.filters-container{
+    display:flex;
+    gap:20px;
+    align-items:center;
+    margin-bottom:25px;
+    flex-wrap:wrap
+}
+.mat-form-field{
+    flex-grow:1
+}
+table{
+    width:100%
+}
+

@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { FlashBiodiesel } from './flash-biodiesel';
+import { ReportHistory } from './report-history';
 
-describe('FlashBiodiesel', () => {
-  let component: FlashBiodiesel;
-  let fixture: ComponentFixture<FlashBiodiesel>;
+describe('ReportHistory', () => {
+  let component: ReportHistory;
+  let fixture: ComponentFixture<ReportHistory>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [FlashBiodiesel]
+      imports: [ReportHistory]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(FlashBiodiesel);
+    fixture = TestBed.createComponent(ReportHistory);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
