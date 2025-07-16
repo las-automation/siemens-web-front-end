@@ -1,0 +1,14 @@
+<!-- Ficheiro: src/app/dialogs/real-time-chart/real-time-chart.html -->
+<h2 mat-dialog-title>Monitorização em Tempo Real</h2>
+<mat-dialog-content>
+  <div style="display: block">
+    <canvas baseChart
+      [data]="lineChartData"
+      [options]="lineChartOptions"
+      type="line">
+    </canvas>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Fechar</button>
+</mat-dialog-actions>

@@ -1,6 +1,6 @@
 // Ficheiro: src/app/services/report-data.ts
 import { Injectable } from '@angular/core';
-import { of } from 'rxjs';
+import { of, interval, map } from 'rxjs';
 
 // ATUALIZAÇÃO: Adicionamos os novos campos à interface
 export interface DailyReportData {
@@ -36,7 +36,7 @@ export class ReportDataService {
     ];
     return of(reportData);
   }
-    getReportHistory() {
+  getReportHistory() {
     const historyData: ReportHistory[] = [
       { id: '20250714', data: '14/07/2025', resumo: 'Eficiência média: 98.2%. 2 Alertas registados.' },
       { id: '20250713', data: '13/07/2025', resumo: 'Eficiência média: 97.5%. 1 Alarme crítico.' },
@@ -44,5 +44,16 @@ export class ReportDataService {
       { id: '20250711', data: '11/07/2025', resumo: 'Eficiência média: 96.8%. Parada para manutenção.' },
     ];
     return of(historyData);
+  }
+    // NOVO MÉTODO: Simula um fluxo de dados em tempo real
+  getRealTimeCurrentData() {
+    // A cada 1500ms (1.5 segundos)...
+    return interval(1500).pipe(
+      // ...gera um novo número aleatório para a corrente.
+      map(() => {
+        // Simula uma corrente base de 20A com uma variação de +/- 5A
+        return 20 + (Math.random() * 10 - 5);
+      })
+    );
   }
 }

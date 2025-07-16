@@ -5,6 +5,9 @@ import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { ReportDataService, DailyReportData } from '../../services/report-data';
+import { MatDialog } from '@angular/material/dialog';
+import { RealTimeChartComponent } from '../../dialogs/real-time-chart/real-time-chart';
+
 
 @Component({
   selector: 'app-daily-report',
@@ -20,12 +23,13 @@ export class DailyReportComponent implements OnInit {
   consumoTotalCorrente = 0;
   eficienciaMedia = 0;
 
-  displayedColumns: string[] = ['nomeMaquina', 'horasTrabalhadas', 'consumoCorrente', 'eficiencia', 'diasTrabalhados', 'proximaManutencao'];
+   displayedColumns: string[] = ['nomeMaquina', 'horasTrabalhadas', 'consumoCorrente', 'eficiencia', 'diasTrabalhados', 'proximaManutencao', 'acoes'];
 
-  constructor(private reportService: ReportDataService) {}
+  constructor(private reportService: ReportDataService, public dialog: MatDialog) {}
 
   ngOnInit(): void {
-    this.reportService.getDailyReport().subscribe(data => {
+    // CORREÇÃO: Adicionamos o tipo explícito 'DailyReportData[]' ao parâmetro 'data'.
+    this.reportService.getDailyReport().subscribe((data: DailyReportData[]) => {
       this.reportData = data;
       this.calcularKPIs();
     });
@@ -48,5 +52,12 @@ export class DailyReportComponent implements OnInit {
     if (dias <= 15) return 'alarme';
     if (dias <= 45) return 'atencao';
     return 'normal';
+  }
+
+  abrirGrafico(nomeMaquina: string): void {
+    this.dialog.open(RealTimeChartComponent, {
+      width: '800px',
+      data: { machineName: nomeMaquina } // Passa o nome da máquina para o diálogo
+    });
   }
 }
