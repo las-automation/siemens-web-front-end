@@ -20,7 +20,6 @@ export class DailyReportComponent implements OnInit {
   consumoTotalCorrente = 0;
   eficienciaMedia = 0;
 
-  // ATUALIZAÇÃO: Adicionamos as novas colunas
   displayedColumns: string[] = ['nomeMaquina', 'horasTrabalhadas', 'consumoCorrente', 'eficiencia', 'diasTrabalhados', 'proximaManutencao'];
 
   constructor(private reportService: ReportDataService) {}
@@ -35,17 +34,19 @@ export class DailyReportComponent implements OnInit {
   calcularKPIs(): void {
     if (this.reportData.length === 0) return;
 
-    this.maquinaMaisTrabalhadora = this.reportData.reduce((prev, current) => 
+    // CORREÇÃO: Adicionamos os tipos explícitos aos parâmetros da função reduce
+    this.maquinaMaisTrabalhadora = this.reportData.reduce((prev: DailyReportData, current: DailyReportData) => 
       (prev.horasTrabalhadas > current.horasTrabalhadas) ? prev : current
     );
-    this.consumoTotalCorrente = this.reportData.reduce((acc, item) => acc + item.consumoCorrente, 0);
-    this.eficienciaMedia = this.reportData.reduce((acc, item) => acc + item.eficiencia, 0) / this.reportData.length;
+
+    this.consumoTotalCorrente = this.reportData.reduce((acc: number, item: DailyReportData) => acc + item.consumoCorrente, 0);
+
+    this.eficienciaMedia = this.reportData.reduce((acc: number, item: DailyReportData) => acc + item.eficiencia, 0) / this.reportData.length;
   }
 
-  // NOVO MÉTODO: Retorna uma classe CSS com base nos dias restantes para manutenção
   getManutencaoStatus(dias: number): string {
-    if (dias <= 15) return 'alarme'; // Menos de 15 dias = Alarme
-    if (dias <= 45) return 'atencao'; // Entre 16 e 45 dias = Atenção
-    return 'normal'; // Mais de 45 dias = Normal
+    if (dias <= 15) return 'alarme';
+    if (dias <= 45) return 'atencao';
+    return 'normal';
   }
 }
