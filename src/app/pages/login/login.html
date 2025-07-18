@@ -1,0 +1,21 @@
+<!-- Ficheiro: src/app/pages/login/login.component.html -->
+<div class="login-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Login</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <form (submit)="onSubmit($event)">
+        <mat-form-field appearance="outline">
+          <mat-label>Utilizador</mat-label>
+          <input matInput placeholder="Digite o seu utilizador">
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Senha</mat-label>
+          <input matInput type="password" placeholder="Digite a sua senha">
+        </mat-form-field>
+        <button mat-flat-button color="primary" type="submit">Entrar</button>
+      </form>
+    </mat-card-content>
+  </mat-card>
+</div>
