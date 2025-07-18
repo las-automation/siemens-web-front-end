@@ -18,7 +18,6 @@ import { LogoutButtonComponent } from '../logout-button/logout-button';
 export class HeaderComponent {
   // 3. Restaura a lista completa de links de navegação
   navLinks = [
-    { path: 'dashboard', label: 'Dashboard' },
     { path: 'relatorios', label: 'Relatório Diário' },
     { path: 'historico-relatorios', label: 'Histórico' },
   ];
