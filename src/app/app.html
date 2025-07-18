@@ -1,4 +1,9 @@
-<!-- Conteúdo de src/app/app.component.html -->
-<app-header></app-header>
-<app-modal></app-modal>
+<!-- Ficheiro: src/app/app.component.html -->
+
+<!-- O cabeçalho só é renderizado se o nosso "jornal" (isLoggedIn$) disser 'true' -->
+@if (isLoggedIn$ | async) {
+  <app-header></app-header>
+}
+
+<!-- O router-outlet é responsável por carregar a página atual (seja o login ou o dashboard) -->
 <router-outlet></router-outlet>
