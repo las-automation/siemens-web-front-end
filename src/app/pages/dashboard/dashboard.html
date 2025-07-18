@@ -1,9 +1,0 @@
-<!-- Ficheiro: src/app/pages/dashboard/dashboard.component.html -->
-<main class="dashboard-grid">
-  <!-- Usamos *ngFor para criar um <app-sensor-card> para cada item no nosso array 'sensores' -->
-  <app-sensor-card *ngFor="let sensor of sensores" [dadosDoSensor]="sensor"></app-sensor-card>
-   <app-machine-status-panel [listaDeMaquinas]="maquinas"></app-machine-status-panel>
-  @for (motor of motores; track motor.id) {
-    <app-motor [dadosDoMotor]="motor"></app-motor>
-  }
-</main>
