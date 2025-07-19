@@ -18,32 +18,32 @@ export class AuthService {
 
   // MÉTODO DE LOGIN ATUALIZADO
   async login(username: string, password: string): Promise<boolean> {
+    // --- TESTE DE DIAGNÓSTICO ---
+    // Esta linha irá mostrar no console do navegador exatamente o que estamos a enviar.
+    console.log('A tentar fazer login com:', { username, password });
+
     try {
-      // CORREÇÃO: Usamos 'http' em vez de 'https' para o servidor local.
       const response = await fetch('http://localhost:8080/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
       });
 
-      // Se a resposta da API for bem-sucedida (status 2xx)
-      if (response.ok) {
+      if (response.ok) { // Status 200-299
         const data = await response.json();
         if (data && data.token) {
-          localStorage.setItem('user_token', data.token); // Guarda o token recebido
+          localStorage.setItem('user_token', data.token);
           this.loggedIn.next(true);
-          // Como removemos o dashboard, vamos redirecionar para uma página 'home'
-          this.router.navigate(['/home']); 
+          this.router.navigate(['/relatorios']); 
           return true;
         }
       }
 
-      // Se a resposta não for 'ok' ou não tiver um token
+      // Se a resposta for 401 ou outro erro
       alert('Utilizador ou senha inválidos.');
       return false;
 
     } catch (error) {
-      // Se houver um erro de rede (como o servidor estar desligado)
       console.error('Erro ao tentar fazer login:', error);
       alert('Não foi possível conectar ao servidor. Tente novamente mais tarde.');
       return false;
