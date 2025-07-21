@@ -31,10 +31,11 @@ export class AuthService {
 
       if (response.ok) { // Status 200-299
         const data = await response.json();
-        if (data && data.token) {
-          localStorage.setItem('user_token', data.token);
+        console.log(data); // Log para ver o que recebemos do servidor
+        if (data && data.accessToken) {
+          localStorage.setItem('user_token', data.accessToken);
           this.loggedIn.next(true);
-          this.router.navigate(['/relatorios']); 
+          this.router.navigate(['/relatorios']);
           return true;
         }
       }
