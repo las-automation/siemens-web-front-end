@@ -6,8 +6,13 @@ import { of, interval, map } from 'rxjs';
 export interface DailyReportData {
   nomeMaquina: string;
   horasTrabalhadas: number;
+  horasInativas: number;
   consumoCorrente: number; // em kWh
+  corrente: number; // em Amp
   eficiencia: number; // em %
+  nivel: number; // em %
+  temperatura: number;
+  status: 'Operando' | 'Inativo' | 'Manutenção';
   diasTrabalhados: number;
   proximaManutencao: number; // em dias
 }
@@ -27,15 +32,15 @@ export class ReportDataService {
   getDailyReport() {
     // ATUALIZAÇÃO: Adicionamos os dados simulados para os novos campos
     const reportData: DailyReportData[] = [
-      { nomeMaquina: 'Prensa 01', horasTrabalhadas: 7.5, consumoCorrente: 152.3, eficiencia: 98.5, diasTrabalhados: 120, proximaManutencao: 10 },
-      { nomeMaquina: 'Prensa 02', horasTrabalhadas: 8.1, consumoCorrente: 165.1, eficiencia: 99.1, diasTrabalhados: 35, proximaManutencao: 55 },
-      { nomeMaquina: 'Prensa 03', horasTrabalhadas: 6.9, consumoCorrente: 140.0, eficiencia: 97.2, diasTrabalhados: 88, proximaManutencao: 2 },
-      { nomeMaquina: 'Prensa 04', horasTrabalhadas: 7.8, consumoCorrente: 159.8, eficiencia: 98.8, diasTrabalhados: 15, proximaManutencao: 75 },
-      { nomeMaquina: 'Prensa 05', horasTrabalhadas: 5.2, consumoCorrente: 110.5, eficiencia: 95.0, diasTrabalhados: 60, proximaManutencao: 30 },
-      { nomeMaquina: 'Prensa 06', horasTrabalhadas: 8.5, consumoCorrente: 171.2, eficiencia: 99.3, diasTrabalhados: 95, proximaManutencao: 25 },
+      { nomeMaquina: 'Prensa 01', corrente: 152.3, temperatura: 85.1, nivel: 98, status: 'Operando', horasTrabalhadas: 7.5, horasInativas: 0.5, consumoCorrente: 120.5, eficiencia: 98.2, diasTrabalhados: 12, proximaManutencao: 45 },
+      { nomeMaquina: 'Prensa 02', corrente: 165.1, temperatura: 91.5, nivel: 99, status: 'Operando', horasTrabalhadas: 8.1, horasInativas: 0.0, consumoCorrente: 130.2, eficiencia: 97.5, diasTrabalhados: 13, proximaManutencao: 17 },
+      { nomeMaquina: 'Prensa 03', corrente: 0, temperatura: 40.2, nivel: 15, status: 'Inativo', horasTrabalhadas: 6.9, horasInativas: 1.2, consumoCorrente: 110.8, eficiencia: 99.1, diasTrabalhados: 11, proximaManutencao: 5 },
+      { nomeMaquina: 'Prensa 04', corrente: 159.8, temperatura: 88.9, nivel: 97, status: 'Operando', horasTrabalhadas: 7.8, horasInativas: 0.3, consumoCorrente: 125.7, eficiencia: 96.8, diasTrabalhados: 14, proximaManutencao: 60 },
+      { nomeMaquina: 'Prensa 05', corrente: 0, temperatura: 25.0, nivel: 0, status: 'Manutenção', horasTrabalhadas: 5.2, horasInativas: 2.9, consumoCorrente: 100.3, eficiencia: 95.4, diasTrabalhados: 10, proximaManutencao: 20 },
     ];
     return of(reportData);
   }
+
   getReportHistory() {
     const historyData: ReportHistory[] = [
       { id: '20250714', data: '14/07/2025', resumo: 'Eficiência média: 98.2%. 2 Alertas registados.' },
@@ -45,7 +50,8 @@ export class ReportDataService {
     ];
     return of(historyData);
   }
-    // NOVO MÉTODO: Simula um fluxo de dados em tempo real
+
+  // NOVO MÉTODO: Simula um fluxo de dados em tempo real
   getRealTimeCurrentData() {
     // A cada 1500ms (1.5 segundos)...
     return interval(1500).pipe(
