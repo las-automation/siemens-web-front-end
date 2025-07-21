@@ -31,7 +31,6 @@ export class AuthService {
 
       if (response.ok) { // Status 200-299
         const data = await response.json();
-        console.log(data); // Log para ver o que recebemos do servidor
         if (data && data.accessToken) {
           localStorage.setItem('user_token', data.accessToken);
           this.loggedIn.next(true);
