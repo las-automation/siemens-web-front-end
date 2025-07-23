@@ -34,10 +34,15 @@ export class AuthService {
         if (data && data.accessToken) {
           localStorage.setItem('user_token', data.accessToken);
           this.loggedIn.next(true);
+<<<<<<< Updated upstream
           this.router.navigate(['/relatorios']);
+=======
+          // Como removemos o dashboard, vamos redirecionar para uma página 'home'
+          this.router.navigate(['/relatorios']); 
+>>>>>>> Stashed changes
           return true;
         }
-      }
+      }  
 
       // Se a resposta for 401 ou outro erro
       alert('Utilizador ou senha inválidos.');
