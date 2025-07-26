@@ -48,62 +48,9 @@
     </mat-card>
   </div>
 
+  <button mat-raised-button color="accent" (click)="salvarPrimeiroRelatorio()">
+  Salvar Dados da Primeira Máquina
+</button>
   <!-- Tabela com os dados detalhados -->
-  <h2>Detalhes por Máquina</h2>
-  <table mat-table [dataSource]="reportData" class="mat-elevation-z8">
-
-    <!-- Colunas existentes (nome, horas, consumo, eficiência) continuam aqui -->
-    <ng-container matColumnDef="nomeMaquina">
-      <th mat-header-cell *matHeaderCellDef> Máquina </th>
-      <td mat-cell *matCellDef="let element"> {{element.nomeMaquina}} </td>
-    </ng-container>
-    <ng-container matColumnDef="horasTrabalhadas">
-      <th mat-header-cell *matHeaderCellDef> Horas Trabalhadas </th>
-      <td mat-cell *matCellDef="let element"> {{element.horasTrabalhadas.toFixed(1)}}h </td>
-    </ng-container>
-    <ng-container matColumnDef="consumoCorrente">
-      <th mat-header-cell *matHeaderCellDef> Consumo (kWh) </th>
-      <td mat-cell *matCellDef="let element"> {{element.consumoCorrente.toFixed(2)}} </td>
-    </ng-container>
-    <ng-container matColumnDef="eficiencia">
-      <th mat-header-cell *matHeaderCellDef> Eficiência (%) </th>
-      <td mat-cell *matCellDef="let element"> {{element.eficiencia.toFixed(1)}}% </td>
-    </ng-container>
-
-    <!-- NOVA COLUNA: Dias Trabalhando -->
-    <ng-container matColumnDef="diasTrabalhados">
-      <th mat-header-cell *matHeaderCellDef> Dias Operando </th>
-      <td mat-cell *matCellDef="let element"> {{element.diasTrabalhados}} </td>
-    </ng-container>
-
-    <!-- NOVA COLUNA: Próxima Manutenção com barra visual -->
-    <ng-container matColumnDef="proximaManutencao">
-      <th mat-header-cell *matHeaderCellDef> Próx. Manutenção </th>
-      <td mat-cell *matCellDef="let element">
-        <div class="manutencao-container">
-          <span>{{element.proximaManutencao}} dias</span>
-          <div class="progress-bar-background">
-            <div class="progress-bar-fill"
-                 [style.width.%]="(element.proximaManutencao / 90) * 100"
-                 [ngClass]="getManutencaoStatus(element.proximaManutencao)">
-            </div>
-          </div>
-        </div>
-      </td>
-    </ng-container>
-
-
-<!-- NOVA COLUNA: Ações -->
-<ng-container matColumnDef="acoes">
-  <th mat-header-cell *matHeaderCellDef> Gráfico </th>
-  <td mat-cell *matCellDef="let element">
-    <button mat-icon-button color="primary" (click)="abrirGrafico(element.nomeMaquina)" aria-label="Ver gráfico em tempo real">
-      <mat-icon>show_chart</mat-icon>
-    </button>
-  </td>
-</ng-container>
-
-    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-  </table>
+   <app-machines-report [reportData]="reportData"></app-machines-report>
 </div>

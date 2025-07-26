@@ -7,12 +7,20 @@ import { MatIconModule } from '@angular/material/icon';
 import { ReportDataService, DailyReportData } from '../../services/report-data';
 import { MatDialog } from '@angular/material/dialog';
 import { RealTimeChartComponent } from '../../dialogs/real-time-chart/real-time-chart';
+import { MachinesReport } from "../../features/machines-report/machines-report";
 
 
 @Component({
   selector: 'app-daily-report',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatTableModule, MatIconModule],
+  imports: [
+    CommonModule, 
+    MatCardModule, 
+    MatTableModule, 
+    MatIconModule, 
+    MachinesReport,
+    MachinesReport,
+  ],
   templateUrl: './daily-report.html',
   styleUrl: './daily-report.css'
 })
@@ -31,21 +39,36 @@ export class DailyReportComponent implements OnInit {
     // CORREÇÃO: Adicionamos o tipo explícito 'DailyReportData[]' ao parâmetro 'data'.
     this.reportService.getDailyReport().subscribe((data: DailyReportData[]) => {
       this.reportData = data;
-      this.calcularKPIs();
     });
   }
 
-  calcularKPIs(): void {
-    if (this.reportData.length === 0) return;
+  buscarDados(): void {
+    console.log('Componente a pedir dados ao serviço...');
+    this.reportService.getDailyReport().subscribe(dadosRecebidos => {
+      console.log('Componente recebeu os dados!', dadosRecebidos);
+      this.reportData = dadosRecebidos;
+    });
+  }
 
-    // CORREÇÃO: Adicionamos os tipos explícitos aos parâmetros da função reduce
-    this.maquinaMaisTrabalhadora = this.reportData.reduce((prev: DailyReportData, current: DailyReportData) => 
-      (prev.horasTrabalhadas > current.horasTrabalhadas) ? prev : current
-    );
-
-    this.consumoTotalCorrente = this.reportData.reduce((acc: number, item: DailyReportData) => acc + item.consumoCorrente, 0);
-
-    this.eficienciaMedia = this.reportData.reduce((acc: number, item: DailyReportData) => acc + item.eficiencia, 0) / this.reportData.length;
+  // Exemplo de como usaríamos a função de salvar
+  salvarPrimeiroRelatorio(): void {
+    if (this.reportData.length > 0) {
+      const primeiroReport = this.reportData[0];
+      console.log('Componente a pedir para salvar o relatório:', primeiroReport);
+      this.reportService.createReport(primeiroReport).subscribe({
+        next: () => {
+          alert('Relatório salvo com sucesso!');
+          // Opcional: atualizar a lista depois de salvar
+          this.buscarDados(); 
+        },
+        error: (err) => {
+          alert('Falha ao salvar o relatório.');
+          console.error(err);
+        }
+      });
+    } else {
+      alert('Não há dados para salvar!');
+    }
   }
 
   getManutencaoStatus(dias: number): string {
