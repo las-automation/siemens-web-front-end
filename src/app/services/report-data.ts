@@ -4,6 +4,8 @@ import { Observable, of, interval, map, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 
 export interface DailyReportData {
+  reportId: number;
+
   nomeMaquina: string;
   horasTrabalhadas: number;
   horasInativas: number;
@@ -14,6 +16,8 @@ export interface DailyReportData {
   status: string;
   diasTrabalhados: number;
   proximaManutencao: number;
+
+  consumoCorrente: number;
 }
 
 export interface ReportHistory {
@@ -83,6 +87,15 @@ export class ReportDataService {
     return throwError(() => new Error('Falha na comunicação com o servidor. Tente novamente.'));
   }
 
+  // 4. MÉTODO PARA "ATUALIZAR" DADOS (PUT)
+  updateReport(reportId: number, report: DailyReportData): Observable<void> {
+    const token = localStorage.getItem('user_token');
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+    // Construímos a URL para o recurso específico, ex: /reports/1
+    return this.http.put<void>(`${this.API_URL}/${reportId}`, report, { headers });
+  }
+
+  // 5. MÉTODO PARA "BUSCAR" HISTÓRICO DE RELATÓRIOS
   getReportHistory(): Observable<ReportHistory[]> {
     const historyData: ReportHistory[] = [
       { id: '20250714', data: '14/07/2025', resumo: 'Eficiência média: 98.2%. 2 Alertas registados.' },
