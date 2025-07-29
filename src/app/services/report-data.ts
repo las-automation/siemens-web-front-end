@@ -41,10 +41,8 @@ export class ReportDataService {
   // 1. MÉTODO PARA "BUSCAR" DADOS (GET)
   getDailyReport(): Observable<DailyReportData[]> {
     console.log('Serviço está a BUSCAR dados da API...');
-    
     // 2. Pegamos o token que foi guardado no login
     const token = localStorage.getItem('user_token');
-
     if (!token) {
       console.error('Token não encontrado! O utilizador precisa de fazer login.');
     }
@@ -52,7 +50,6 @@ export class ReportDataService {
     const headers = new HttpHeaders({
       'Authorization': `Bearer ${token}`
     });
-
     // 4. Enviamos a requisição com os cabeçalhos
     return this.http.get<DailyReportData[]>(this.API_URL, { headers }).pipe(
       tap(data => console.log('Dados recebidos da API:', data)),
