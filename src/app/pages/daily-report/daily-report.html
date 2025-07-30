@@ -2,7 +2,10 @@
 <div class="report-container">
   <h1>Relatório Diário de Produção</h1>
   <p class="report-date">Data: 14 de Julho de 2025</p>
-  <app-save-button (saveClicked)="salvarRelatorio()"></app-save-button>
+
+  <div class="actions-header">
+    <app-save-button (saveClicked)="salvarRelatorio()"></app-save-button>
+  </div>
   <!-- Secção de KPIs com Cards -->
   <div class="kpi-grid">
     @if (maquinaMaisTrabalhadora) {
@@ -45,7 +48,17 @@
         <p class="kpi-value">{{ eficienciaMedia.toFixed(2) }} %</p>
       </mat-card-content>
     </mat-card>
-  </div>
+
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Alertas no Dia</mat-card-title>
+      <mat-card-subtitle>Máquinas com anomalias ou paradas</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <p class="kpi-value">{{ alertasNoDia }}</p>
+    </mat-card-content>
+  </mat-card>
+</div>
   <!-- Tabela com os dados detalhados -->
    <app-machines-report [reportData]="reportData"></app-machines-report>
 </div>
