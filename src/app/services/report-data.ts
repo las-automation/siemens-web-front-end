@@ -3,28 +3,9 @@ import { HttpClient, HttpErrorResponse, HttpHeaders  } from '@angular/common/htt
 import { Observable, of, interval, map, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 
-export interface DailyReportData {
-  reportId: number;
+import { HistoryDetailsModal } from '../modal/history-details-modal/history-details-modal';
+import { DailyReportData } from '../modal/daily-report-data/daily-report-data';
 
-  nomeMaquina: string;
-  horasTrabalhadas: number;
-  horasInativas: number;
-  corrente: number;
-  eficiencia: number;
-  nivel: number;
-  temperatura: number;
-  status: string;
-  diasTrabalhados: number;
-  proximaManutencao: number;
-
-  consumoCorrente: number;
-}
-
-export interface ReportHistory {
-  id: string;
-  data: string;
-  resumo: string;
-}
 
 @Injectable({
   providedIn: 'root'
@@ -84,24 +65,22 @@ export class ReportDataService {
     return throwError(() => new Error('Falha na comunicação com o servidor. Tente novamente.'));
   }
 
-  // 4. MÉTODO PARA "ATUALIZAR" DADOS (PUT)
-  updateReport(reportId: number, report: DailyReportData): Observable<void> {
-    const token = localStorage.getItem('user_token');
-    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-    // Construímos a URL para o recurso específico, ex: /reports/1
-    return this.http.put<void>(`${this.API_URL}/${reportId}`, report, { headers });
-  }
-
   // 5. MÉTODO PARA "BUSCAR" HISTÓRICO DE RELATÓRIOS
-  getReportHistory(): Observable<ReportHistory[]> {
-    const historyData: ReportHistory[] = [
+  getReportHistory(): Observable<HistoryDetailsModal[]> {
+    console.log('A buscar dados mocados do histórico...');
+    const mockHistory: HistoryDetailsModal[] = [
       { id: '20250714', data: '14/07/2025', resumo: 'Eficiência média: 98.2%. 2 Alertas registados.' },
       { id: '20250713', data: '13/07/2025', resumo: 'Eficiência média: 97.5%. 1 Alarme crítico.' },
-      { id: '20250712', data: '12/07/2025', resumo: 'Eficiência média: 99.1%. Operação normal.' },
-      { id: '20250711', data: '11/07/2025', resumo: 'Eficiência média: 96.8%. Parada para manutenção.' },
+      { id: '20250712', data: '12/07/2025', resumo: 'Eficiência média: 99.1%. Operação normal.' }
     ];
-    return of(historyData);
+    return of(mockHistory);
   }
+
+  saveReportSnapshot(reportData: DailyReportData[]): Observable<void> {
+    console.log('A simular o salvamento do snapshot:', reportData);
+    return of(undefined); 
+  }
+
   getRealTimeCurrentData() {
     return interval(1500).pipe(
       map(() => 20 + (Math.random() * 10 - 5))

@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
-import { ReportDataService, DailyReportData } from '../../services/report-data';
+import { DailyReportData } from '../../modal/daily-report-data/daily-report-data'; 
+import { ReportDataService } from '../../services/report-data';
 import { MatDialog } from '@angular/material/dialog';
 import { RealTimeChartComponent } from '../../dialogs/real-time-chart/real-time-chart';
 

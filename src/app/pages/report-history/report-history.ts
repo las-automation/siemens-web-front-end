@@ -9,8 +9,11 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+
+import { HistoryDetailsModal } from '../../modal/history-details-modal/history-details-modal';
+
 // Imports do noso proxecto
-import { ReportDataService, ReportHistory } from '../../services/report-data';
+import { ReportDataService } from '../../services/report-data';
 
 @Component({
   selector: 'app-report-history',
@@ -28,7 +31,7 @@ export class ReportHistoryComponent implements OnInit {
   // As columnas que a nosa táboa irá exhibir
   displayedColumns: string[] = ['data', 'resumo', 'acoes'];
   // A nosa fonte de datos para a táboa
-  dataSource: ReportHistory[] = [];
+  dataSource: HistoryDetailsModal[] = [];
 
   constructor(private reportService: ReportDataService) {}
 

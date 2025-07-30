@@ -4,9 +4,14 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
-import { ReportDataService, DailyReportData } from '../../services/report-data';
 import { MatDialog } from '@angular/material/dialog';
 import { RealTimeChartComponent } from '../../dialogs/real-time-chart/real-time-chart';
+
+// 1. Importamos a interface do nosso ficheiro de modelo
+import { DailyReportData } from '../../modal/daily-report-data/daily-report-data'; 
+// 2. Importamos o serviço do ficheiro .service.ts
+import { ReportDataService } from '../../services/report-data'; 
+// 3. Importamos os componentes filhos que serão usados no template
 import { MachinesReport } from "../../features/machines-report/machines-report";
 import { SaveButtonComponent } from '../../components/save-button/save-button';
 
@@ -22,7 +27,6 @@ import { switchMap } from 'rxjs/operators';
     MatTableModule, 
     MatIconModule, 
     MachinesReport,
-    MachinesReport,
     SaveButtonComponent,
   ],
   templateUrl: './daily-report.html',
@@ -34,6 +38,10 @@ export class DailyReportComponent implements OnInit, OnDestroy {
   maquinaMaisTrabalhadora: DailyReportData | undefined;
   consumoTotalCorrente = 0;
   eficienciaMedia = 0;
+  alertasNoDia = 0;
+
+   private readonly LIMITE_TEMPERATURA = 90.0; // Ex: Alerta acima de 90°C
+  private readonly LIMITE_CORRENTE = 180.0; // Ex: Alerta acima de 180A
 
   private dataSubscription!: Subscription;
 
@@ -62,19 +70,25 @@ export class DailyReportComponent implements OnInit, OnDestroy {
 
   // 3. Crie o método que será executado quando o evento for recebido
   salvarRelatorio(): void {
-    console.log('O botão Salvar Relatório foi clicado!');
-
     if (this.reportData.length === 0) {
-      alert('Não há dados para salvar.');
+      alert('Não há dados em tempo real para salvar.');
       return;
     }
 
-    // A lógica aqui seria chamar um método do serviço para salvar o estado atual.
-    // O backend precisaria de ter um endpoint para receber este "snapshot".
-    // Exemplo:
-    // this.reportService.saveReportSnapshot(this.reportData).subscribe(() => {
-    //   alert('Relatório histórico salvo com sucesso!');
-    // });
+    console.log('A pedir ao serviço para salvar o snapshot...');
+    this.reportService.saveReportSnapshot(this.reportData).subscribe({
+      next: () => {
+        alert('Snapshot do relatório salvo com sucesso!');
+      },
+      error: (err) => {
+        alert('Ocorreu um erro ao salvar o snapshot.');
+        console.error(err);
+      }
+    });
+
+    this.reportService.saveReportSnapshot(this.reportData).subscribe(() => {
+      alert('Relatório histórico salvo com sucesso!');
+    });
 
     // Por agora, vamos apenas mostrar os dados que seriam salvos:
     alert('Funcionalidade de salvar snapshot a ser implementada.');
@@ -88,8 +102,18 @@ export class DailyReportComponent implements OnInit, OnDestroy {
       this.maquinaMaisTrabalhadora = undefined;
       this.consumoTotalCorrente = 0;
       this.eficienciaMedia = 0;
+      this.alertasNoDia = 0;
       return;
     }
+
+    this.alertasNoDia = this.reportData.filter(item => {
+      const statusAnormal = item.status !== 'Operando';
+      const temperaturaElevada = item.temperatura > this.LIMITE_TEMPERATURA;
+      const correnteIrregular = item.corrente > this.LIMITE_CORRENTE;
+
+      // Se qualquer uma das condições for verdadeira, é um alerta.
+      return statusAnormal || temperaturaElevada || correnteIrregular;
+    }).length;
 
     this.maquinaMaisTrabalhadora = this.reportData.reduce((prev, current) =>
       (prev.horasTrabalhadas > current.horasTrabalhadas) ? prev : current
