@@ -119,7 +119,7 @@ export class DailyReportComponent implements OnInit, OnDestroy {
       (prev.horasTrabalhadas > current.horasTrabalhadas) ? prev : current
     );
 
-    this.consumoTotalCorrente = this.reportData.reduce((acc, item) => acc + item.consumoCorrente, 0);
+     this.consumoTotalCorrente = this.reportData.reduce((acc, item) => acc + (item.consumoCorrente || 0), 0);
 
     const totalEficiencia = this.reportData.reduce((acc, item) => acc + item.eficiencia, 0);
     this.eficienciaMedia = totalEficiencia / this.reportData.length;
