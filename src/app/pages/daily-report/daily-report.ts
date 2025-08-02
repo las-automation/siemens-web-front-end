@@ -138,10 +138,12 @@ export class DailyReportComponent implements OnInit, OnDestroy {
     return 'normal';
   }
 
-  abrirGrafico(nomeMaquina: string): void {
+  abrirGrafico(machineData: DailyReportData): void {
+    console.log('Evento recebido pelo pai! A abrir o modal para:', machineData.nomeMaquina);
     this.dialog.open(RealTimeChartComponent, {
       width: '800px',
-      data: { machineName: nomeMaquina } // Passa o nome da máquina para o diálogo
+      // Passamos os dados da máquina para o modal
+      data: { machine: machineData }
     });
   }
 }

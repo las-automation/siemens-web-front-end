@@ -6,8 +6,10 @@ import { Component } from '@angular/core';
   templateUrl: './daily-report-data.html',
   styleUrl: './daily-report-data.css'
 })
-export class DailyReportData {
-
+export class DailyReportDataComponent {
+  // Este componente é um "burro" que apenas recebe os dados e os exibe.
+  // Ele não sabe o que os dados significam, apenas como exibi-los.
+  dailyReportData: DailyReportData[] = [];
 }
 export interface DailyReportData {
   reportId: number;
