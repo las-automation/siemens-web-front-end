@@ -6,6 +6,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { RealTimeChartComponent } from '../../dialogs/real-time-chart/real-time-chart';
+import { ReportDownloadService } from '../../services/report-download';
 
 // 1. Importamos a interface do nosso ficheiro de modelo
 import { DailyReportData } from '../../modal/daily-report-data/daily-report-data'; 
@@ -47,7 +48,11 @@ export class DailyReportComponent implements OnInit, OnDestroy {
 
    displayedColumns: string[] = ['nomeMaquina', 'horasTrabalhadas', 'consumoCorrente', 'eficiencia', 'diasTrabalhados', 'proximaManutencao', 'acoes'];
 
-  constructor(private reportService: ReportDataService, public dialog: MatDialog) {}
+  constructor(
+    private reportService: ReportDataService, 
+    public dialog: MatDialog,
+    private reportDownloadService: ReportDownloadService
+  ) {}
 
   ngOnInit(): void {
     
@@ -69,30 +74,24 @@ export class DailyReportComponent implements OnInit, OnDestroy {
   }
 
   // 3. Crie o método que será executado quando o evento for recebido
-  salvarRelatorio(): void {
+    salvarRelatorio(): void {
     if (this.reportData.length === 0) {
-      alert('Não há dados em tempo real para salvar.');
+      alert('Não há dados para salvar e baixar.');
       return;
     }
 
-    console.log('A pedir ao serviço para salvar o snapshot...');
+    // Primeiro, salva o snapshot
     this.reportService.saveReportSnapshot(this.reportData).subscribe({
-      next: () => {
-        alert('Snapshot do relatório salvo com sucesso!');
+      next: (response) => {
+        alert('Snapshot salvo com sucesso! A iniciar o download do PDF...');
+        // Se salvar funcionou, usa o ID recebido para pedir o download
+        this.downloadService.downloadSnapshotAsPdf(response.historyId);
       },
       error: (err) => {
         alert('Ocorreu um erro ao salvar o snapshot.');
         console.error(err);
       }
     });
-
-    this.reportService.saveReportSnapshot(this.reportData).subscribe(() => {
-      alert('Relatório histórico salvo com sucesso!');
-    });
-
-    // Por agora, vamos apenas mostrar os dados que seriam salvos:
-    alert('Funcionalidade de salvar snapshot a ser implementada.');
-    console.log('Dados que seriam salvos como histórico:', this.reportData);
   }
 
   // 5. Método para calcular os KPIs

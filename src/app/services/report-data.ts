@@ -104,9 +104,10 @@ export class ReportDataService {
     return of(mockHistory);
   }
 
-  saveReportSnapshot(reportData: DailyReportData[]): Observable<void> {
-    console.log('A simular o salvamento do snapshot:', reportData);
-    return of(undefined); 
+  saveReportSnapshot(reportData: DailyReportData[]): Observable<SnapshotResponse> {
+    const token = localStorage.getItem('user_token');
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+    return this.http.post<SnapshotResponse>(`${this.API_URL}/history`, reportData, { headers });
   }
 
   getRealTimeCurrentData() {
