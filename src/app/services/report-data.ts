@@ -6,35 +6,67 @@ import { catchError, tap } from 'rxjs/operators';
 import { HistoryDetailsModal } from '../modal/history-details-modal/history-details-modal';
 import { DailyReportData } from '../modal/daily-report-data/daily-report-data';
 
+interface ReportApiResponse {
+  reportId?: number;
+  report_id?: number;
+  nomeMaquina?: string;
+  nome_maquina?: string;
+  horasTrabalhadas?: number;
+  horas_trabalhadas?: number;
+  horasInativas?: number;
+  horas_inativas?: number;
+  corrente?: number;
+  eficiencia?: number;
+  nivel?: number;
+  temperatura?: number;
+  status?: string;
+  diasTrabalhados?: number;
+  dias_trabalhados?: number;
+  proximaManutencao?: number;
+  proxima_manutencao?: number;
+  consumoCorrente?: number;
+  consumo_energia?: number;
+}
+
+export interface SnapshotResponse {
+  historyId: number;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 
-
 export class ReportDataService {
-  private readonly API_URL = 'http://localhost:8080/reports';
+  private readonly API_URL = 'https://siemens-web-back-end.onrender.com/reports';
 
+  constructor(private http: HttpClient) { }
 
-  constructor(private http: HttpClient) {}
-
-
-  // 1. MÉTODO PARA "BUSCAR" DADOS (GET)
   getDailyReport(): Observable<DailyReportData[]> {
-    console.log('Serviço está a BUSCAR dados da API...');
-    // 2. Pegamos o token que foi guardado no login
     const token = localStorage.getItem('user_token');
-    if (!token) {
-      console.error('Token não encontrado! O utilizador precisa de fazer login.');
-    }
-    // 3. Criamos o cabeçalho de autorização
-    const headers = new HttpHeaders({
-      'Authorization': `Bearer ${token}`
-    });
-    // 4. Enviamos a requisição com os cabeçalhos
-    return this.http.get<DailyReportData[]>(this.API_URL, { headers }).pipe(
-      tap(data => console.log('Dados recebidos da API:', data)),
-      catchError(this.handleError)
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+
+    return this.http.get<ReportApiResponse[]>(this.API_URL, { headers }).pipe(
+      // Usamos o 'map' para "traduzir" e limpar os dados
+      map(apiResponse => {
+        if (!apiResponse) return []; // Se a resposta for nula, retorna um array vazio
+        
+        return apiResponse.map(item => ({
+          // A lógica '||' garante que pegamos o valor, não importa o nome da propriedade
+          reportId: item.reportId || item.report_id || 0,
+          nomeMaquina: item.nomeMaquina || item.nome_maquina || 'Nome Indisponível',
+          horasTrabalhadas: item.horasTrabalhadas || item.horas_trabalhadas || 0,
+          horasInativas: item.horasInativas || item.horas_inativas || 0,
+          corrente: item.corrente || 0,
+          eficiencia: item.eficiencia || 0,
+          nivel: item.nivel || 0,
+          temperatura: item.temperatura || 0,
+          status: item.status || 'Desconhecido',
+          diasTrabalhados: item.diasTrabalhados || item.dias_trabalhados || 0,
+          proximaManutencao: item.proximaManutencao || item.proxima_manutencao || 0,
+          // AQUI ESTÁ A TRADUÇÃO que resolve o bug do NaN
+          consumoCorrente: item.consumoCorrente || item.consumo_energia || 0
+        }));
+      })
     );
   }
 
@@ -76,9 +108,10 @@ export class ReportDataService {
     return of(mockHistory);
   }
 
-  saveReportSnapshot(reportData: DailyReportData[]): Observable<void> {
-    console.log('A simular o salvamento do snapshot:', reportData);
-    return of(undefined); 
+  saveReportSnapshot(reportData: DailyReportData[]): Observable<SnapshotResponse> {
+    const token = localStorage.getItem('user_token');
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+    return this.http.post<SnapshotResponse>(`${this.API_URL}/history`, reportData, { headers });
   }
 
   getRealTimeCurrentData() {

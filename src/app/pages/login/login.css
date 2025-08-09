@@ -1,16 +1,50 @@
-.login-container{
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:100vh;
-    background-color:#f0f2f5
+.login-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 16px;
+  /* Fundo sem o branco, como você sugeriu, para um visual mais forte */
+  background: linear-gradient(90deg, rgba(8, 166, 166, 1) 60%, rgba(0, 89, 157, 1) 100%);
 }
-mat-card{
-    width:100%;
-    max-width:400px
+
+.logo-wrapper {
+  margin-bottom: 32px;
 }
-form{
-    display:flex;
-    flex-direction:column;
-    gap:15px
+
+mat-card {
+  width: 100%;
+  max-width: 400px;
+  /* Aumentamos o padding interno para dar mais espaço */
+  padding: 24px; 
+}
+
+/* Centraliza o texto do cabeçalho e adiciona mais espaço abaixo */
+mat-card-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+mat-card-title {
+  font-size: 1.8em;
+  font-weight: bold;
+}
+
+mat-card-subtitle {
+  color: #666;
+  margin-top: 8px; /* Adiciona um pequeno espaço abaixo do título */
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  /* Aumentamos o espaço entre os campos do formulário */
+  gap: 20px; 
+}
+
+.login-button {
+  /* Tornamos o botão um pouco mais alto e com a fonte maior */
+  padding: 12px 0; 
+  font-size: 1em;
 }

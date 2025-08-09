@@ -1,14 +1,21 @@
-<!-- Ficheiro: src/app/dialogs/real-time-chart/real-time-chart.html -->
-<h2 mat-dialog-title>Monitorização em Tempo Real</h2>
-<mat-dialog-content>
-  <div style="display: block">
-    <canvas baseChart
-      [data]="lineChartData"
-      [options]="lineChartOptions"
-      type="line">
-    </canvas>
-  </div>
-</mat-dialog-content>
-<mat-dialog-actions align="end">
-  <button mat-button mat-dialog-close>Fechar</button>
-</mat-dialog-actions>
+<h1 mat-dialog-title>Monitorização em Tempo Real: {{ machineData.machine.nomeMaquina }}</h1>
+
+<div mat-dialog-content>
+  <!-- Gráfico de Corrente -->
+  <h3>Variação de Corrente</h3>
+  <app-line-chart 
+    [lineChartData]="currentChartData"
+    [lineChartOptions]="lineChartOptions">
+  </app-line-chart>
+
+  <!-- Gráfico de Temperatura -->
+  <h3 style="margin-top: 20px;">Variação de Temperatura</h3>
+  <app-line-chart 
+    [lineChartData]="temperatureChartData"
+    [lineChartOptions]="lineChartOptions">
+  </app-line-chart>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="fecharModal()">Fechar</button>
+</div>

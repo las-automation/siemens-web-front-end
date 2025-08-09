@@ -60,5 +60,8 @@
   </mat-card>
 </div>
   <!-- Tabela com os dados detalhados -->
-   <app-machines-report [reportData]="reportData"></app-machines-report>
+  <app-machines-report 
+    [reportData]="reportData"
+    (viewChartClicked)="abrirGrafico($event)">
+  </app-machines-report>
 </div>

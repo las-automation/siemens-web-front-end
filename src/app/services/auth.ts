@@ -23,7 +23,7 @@ export class AuthService {
     console.log('A tentar fazer login com:', { username, password });
 
     try {
-      const response = await fetch('http://localhost:8080/login', {
+      const response = await fetch('https://siemens-web-back-end.onrender.com/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })
