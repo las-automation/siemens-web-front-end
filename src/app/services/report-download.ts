@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { saveAs } from 'file-saver'; // 1. Precisamos de uma biblioteca para salvar ficheiros
+import { saveAs } from 'file-saver';
 
 @Injectable({
   providedIn: 'root'

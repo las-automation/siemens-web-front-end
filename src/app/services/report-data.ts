@@ -28,12 +28,16 @@ interface ReportApiResponse {
   consumo_energia?: number;
 }
 
+export interface SnapshotResponse {
+  historyId: number;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 
 export class ReportDataService {
-  private readonly API_URL = 'http://localhost:8080/reports';
+  private readonly API_URL = 'https://siemens-web-back-end.onrender.com/reports';
 
   constructor(private http: HttpClient) { }
 

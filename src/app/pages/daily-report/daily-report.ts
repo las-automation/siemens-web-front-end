@@ -41,7 +41,7 @@ export class DailyReportComponent implements OnInit, OnDestroy {
   eficienciaMedia = 0;
   alertasNoDia = 0;
 
-   private readonly LIMITE_TEMPERATURA = 90.0; // Ex: Alerta acima de 90°C
+  private readonly LIMITE_TEMPERATURA = 90.0; // Ex: Alerta acima de 90°C
   private readonly LIMITE_CORRENTE = 180.0; // Ex: Alerta acima de 180A
 
   private dataSubscription!: Subscription;
@@ -51,7 +51,7 @@ export class DailyReportComponent implements OnInit, OnDestroy {
   constructor(
     private reportService: ReportDataService, 
     public dialog: MatDialog,
-    private reportDownloadService: ReportDownloadService
+    private downloadService: ReportDownloadService,
   ) {}
 
   ngOnInit(): void {
