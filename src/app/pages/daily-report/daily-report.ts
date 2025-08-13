@@ -6,7 +6,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { RealTimeChartComponent } from '../../dialogs/real-time-chart/real-time-chart';
-import { ReportDownloadService } from '../../services/report-download';
+
 
 // 1. Importamos a interface do nosso ficheiro de modelo
 import { DailyReportData } from '../../modal/daily-report-data/daily-report-data'; 
@@ -51,7 +51,6 @@ export class DailyReportComponent implements OnInit, OnDestroy {
   constructor(
     private reportService: ReportDataService, 
     public dialog: MatDialog,
-    private downloadService: ReportDownloadService,
   ) {}
 
   ngOnInit(): void {
@@ -80,18 +79,6 @@ export class DailyReportComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Primeiro, salva o snapshot
-    this.reportService.saveReportSnapshot(this.reportData).subscribe({
-      next: (response) => {
-        alert('Snapshot salvo com sucesso! A iniciar o download do PDF...');
-        // Se salvar funcionou, usa o ID recebido para pedir o download
-        this.downloadService.downloadSnapshotAsPdf(response.historyId);
-      },
-      error: (err) => {
-        alert('Ocorreu um erro ao salvar o snapshot.');
-        console.error(err);
-      }
-    });
   }
 
   // 5. Método para calcular os KPIs
