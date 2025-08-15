@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse, HttpHeaders  } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, of, interval, map, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 
 import { HistoryDetailsModal } from '../modal/history-details-modal/history-details-modal';
 import { DailyReportData } from '../modal/daily-report-data/daily-report-data';
 
+// Interface para mapear a resposta da API que pode ter nomes de propriedade inconsistentes
 interface ReportApiResponse {
   reportId?: number;
   report_id?: number;
@@ -35,23 +36,22 @@ export interface SnapshotResponse {
 @Injectable({
   providedIn: 'root'
 })
-
 export class ReportDataService {
   private readonly API_URL = 'https://siemens-web-back-end.onrender.com/reports';
 
   constructor(private http: HttpClient) { }
+
+  // --- MÉTODOS EXISTENTES ---
 
   getDailyReport(): Observable<DailyReportData[]> {
     const token = localStorage.getItem('user_token');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
     return this.http.get<ReportApiResponse[]>(this.API_URL, { headers }).pipe(
-      // Usamos o 'map' para "traduzir" e limpar os dados
       map(apiResponse => {
-        if (!apiResponse) return []; // Se a resposta for nula, retorna um array vazio
+        if (!apiResponse) return [];
         
         return apiResponse.map(item => ({
-          // A lógica '||' garante que pegamos o valor, não importa o nome da propriedade
           reportId: item.reportId || item.report_id || 0,
           nomeMaquina: item.nomeMaquina || item.nome_maquina || 'Nome Indisponível',
           horasTrabalhadas: item.horasTrabalhadas || item.horas_trabalhadas || 0,
@@ -63,14 +63,13 @@ export class ReportDataService {
           status: item.status || 'Desconhecido',
           diasTrabalhados: item.diasTrabalhados || item.dias_trabalhados || 0,
           proximaManutencao: item.proximaManutencao || item.proxima_manutencao || 0,
-          // AQUI ESTÁ A TRADUÇÃO que resolve o bug do NaN
           consumoCorrente: item.consumoCorrente || item.consumo_energia || 0
         }));
-      })
+      }),
+      catchError(this.handleError) // Adicionado tratamento de erro aqui também
     );
   }
 
-  // 2. MÉTODO PARA "ARMAZENAR" DADOS (POST)
   createReport(report: DailyReportData): Observable<void> {
     console.log('Serviço está a ARMAZENAR dados na API...', report);
     
@@ -85,19 +84,6 @@ export class ReportDataService {
     );
   }
 
-  // 3. Função para tratamento de erros
-  private handleError(error: HttpErrorResponse) {
-    if (error.status === 401) {
-      console.error('Erro de Autenticação! O token pode ser inválido ou ter expirado.', error);
-      // Opcional: redirecionar para a página de login
-      // window.location.href = '/login';
-    } else {
-      console.error('Ocorreu um erro na comunicação com a API!', error);
-    }
-    return throwError(() => new Error('Falha na comunicação com o servidor. Tente novamente.'));
-  }
-
-  // 5. MÉTODO PARA "BUSCAR" HISTÓRICO DE RELATÓRIOS
   getReportHistory(): Observable<HistoryDetailsModal[]> {
     console.log('A buscar dados mocados do histórico...');
     const mockHistory: HistoryDetailsModal[] = [
@@ -118,5 +104,48 @@ export class ReportDataService {
     return interval(1500).pipe(
       map(() => 20 + (Math.random() * 10 - 5))
     );
+  }
+
+  // --- NOVO MÉTODO ADICIONADO ---
+
+  /**
+   * Busca um registo de relatório específico com base numa data e hora.
+   * @param dateTimeString Uma string representando a data e hora (ex: '2025-08-15 10:00:00').
+   * @returns Um Observable que emite os dados do relatório encontrado.
+   */
+  getReportByDateTime(dateTimeString: string): Observable<any> {
+    // 1. Log para depuração: Informa que a função foi chamada.
+    console.log(`Serviço: A iniciar busca para a data/hora: ${dateTimeString}`);
+
+    // 2. Obtenção do token de autenticação, essencial para a segurança.
+    const token = localStorage.getItem('user_token');
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+
+    // 3. Codificação da data/hora para uma URL segura.
+    const encodedDateTime = encodeURIComponent(dateTimeString);
+
+    // 4. Construção da URL final para a API.
+    const url = `${this.API_URL}/by-date/${encodedDateTime}`;
+    console.log(`Serviço: URL do pedido GET: ${url}`);
+
+    // 5. Execução do pedido HTTP GET.
+    return this.http.get<any>(url, { headers }).pipe(
+      tap(data => {
+        console.log('Serviço: Resposta da API recebida com sucesso.', data);
+      }),
+      catchError(this.handleError) // Reutiliza a função de tratamento de erros
+    );
+  }
+
+
+  // --- FUNÇÃO PRIVADA DE TRATAMENTO DE ERROS ---
+
+  private handleError(error: HttpErrorResponse) {
+    if (error.status === 401) {
+      console.error('Erro de Autenticação! O token pode ser inválido ou ter expirado.', error);
+    } else {
+      console.error(`Ocorreu um erro na comunicação com a API! Código ${error.status}, ` + `body: ${JSON.stringify(error.error)}`);
+    }
+    return throwError(() => new Error('Falha na comunicação com o servidor. Por favor, tente novamente mais tarde.'));
   }
 }

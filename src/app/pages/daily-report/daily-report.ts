@@ -7,11 +7,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog } from '@angular/material/dialog';
 import { RealTimeChartComponent } from '../../dialogs/real-time-chart/real-time-chart';
 
-
 // 1. Importamos a interface do nosso ficheiro de modelo
 import { DailyReportData } from '../../modal/daily-report-data/daily-report-data'; 
 // 2. Importamos o serviço do ficheiro .service.ts
-import { ReportDataService } from '../../services/report-data'; 
+import { ReportDataService } from '../../services/report-data'; // Corrigido o caminho para .service
 // 3. Importamos os componentes filhos que serão usados no template
 import { MachinesReport } from "../../features/machines-report/machines-report";
 import { SaveButtonComponent } from '../../components/save-button/save-button';
@@ -46,7 +45,7 @@ export class DailyReportComponent implements OnInit, OnDestroy {
 
   private dataSubscription!: Subscription;
 
-   displayedColumns: string[] = ['nomeMaquina', 'horasTrabalhadas', 'consumoCorrente', 'eficiencia', 'diasTrabalhados', 'proximaManutencao', 'acoes'];
+  displayedColumns: string[] = ['nomeMaquina', 'horasTrabalhadas', 'consumoCorrente', 'eficiencia', 'diasTrabalhados', 'proximaManutencao', 'acoes'];
 
   constructor(
     private reportService: ReportDataService, 
@@ -54,9 +53,9 @@ export class DailyReportComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    
+    // --- LÓGICA EXISTENTE PARA ATUALIZAÇÃO EM TEMPO REAL ---
+    // Esta parte continua a buscar os dados a cada segundo.
     this.dataSubscription = interval(1000)
-
       .pipe(
         // O switchMap cancela a requisição anterior se uma nova começar
         switchMap(() => this.reportService.getDailyReport())
@@ -66,25 +65,47 @@ export class DailyReportComponent implements OnInit, OnDestroy {
         this.reportData = data;
         this.calcularKPIs();
       });
-    // CORREÇÃO: Adicionamos o tipo explícito 'DailyReportData[]' ao parâmetro 'data'.
-    this.reportService.getDailyReport().subscribe((data: DailyReportData[]) => {
-      this.reportData = data;
+
+    // --- NOVA LÓGICA PARA TESTAR A BUSCA POR DATA/HORA ---
+    // Esta função será chamada uma única vez quando o componente iniciar.
+    this.testarBuscaPorDataHora();
+  }
+
+  /**
+   * Função de teste para chamar o novo método do serviço e exibir o resultado no console.
+   */
+  testarBuscaPorDataHora(): void {
+    // Defina aqui a data e hora exata que você quer buscar.
+    // IMPORTANTE: Use uma data e hora que você TENHA CERTEZA que existe no seu banco de dados.
+    const dataHoraParaTeste = '2025-08-15 10:00:00'; // <-- MUDE AQUI SE NECESSÁRIO
+
+    console.log(`%c[TESTE] A solicitar relatório para: ${dataHoraParaTeste}`, 'color: blue; font-weight: bold;');
+
+    this.reportService.getReportByDateTime(dataHoraParaTeste).subscribe({
+      next: (dadosDoRelatorio) => {
+        // Sucesso! Os dados chegaram.
+        console.log('%c[TESTE] Relatório específico recebido com SUCESSO:', 'color: green; font-weight: bold;', dadosDoRelatorio);
+      },
+      error: (erro) => {
+        // Ocorreu um erro.
+        console.error('%c[TESTE] Falha ao buscar o relatório específico:', 'color: red; font-weight: bold;', erro);
+      }
     });
   }
 
-  // 3. Crie o método que será executado quando o evento for recebido
-    salvarRelatorio(): void {
+  // --- MÉTODOS EXISTENTES DO COMPONENTE ---
+
+  salvarRelatorio(): void {
     if (this.reportData.length === 0) {
-      alert('Não há dados para salvar e baixar.');
+      // Usar um modal ou um snackbar seria melhor que um alert.
+      console.warn('Não há dados para salvar e baixar.');
       return;
     }
-
+    // Lógica para salvar o relatório...
   }
 
-  // 5. Método para calcular os KPIs
   calcularKPIs(): void {
     if (!this.reportData || this.reportData.length === 0) {
-      // Se não houver dados, resetamos os valores
       this.maquinaMaisTrabalhadora = undefined;
       this.consumoTotalCorrente = 0;
       this.eficienciaMedia = 0;
@@ -96,8 +117,6 @@ export class DailyReportComponent implements OnInit, OnDestroy {
       const statusAnormal = item.status !== 'Operando';
       const temperaturaElevada = item.temperatura > this.LIMITE_TEMPERATURA;
       const correnteIrregular = item.corrente > this.LIMITE_CORRENTE;
-
-      // Se qualquer uma das condições for verdadeira, é um alerta.
       return statusAnormal || temperaturaElevada || correnteIrregular;
     }).length;
 
@@ -105,13 +124,12 @@ export class DailyReportComponent implements OnInit, OnDestroy {
       (prev.horasTrabalhadas > current.horasTrabalhadas) ? prev : current
     );
 
-     this.consumoTotalCorrente = this.reportData.reduce((acc, item) => acc + (item.consumoCorrente || 0), 0);
+    this.consumoTotalCorrente = this.reportData.reduce((acc, item) => acc + (item.consumoCorrente || 0), 0);
 
     const totalEficiencia = this.reportData.reduce((acc, item) => acc + item.eficiencia, 0);
     this.eficienciaMedia = totalEficiencia / this.reportData.length;
   }
 
-    // 6. É ESSENCIAL limpar a inscrição quando o componente é destruído
   ngOnDestroy(): void {
     if (this.dataSubscription) {
       this.dataSubscription.unsubscribe();
@@ -128,7 +146,6 @@ export class DailyReportComponent implements OnInit, OnDestroy {
     console.log('Evento recebido pelo pai! A abrir o modal para:', machineData.nomeMaquina);
     this.dialog.open(RealTimeChartComponent, {
       width: '800px',
-      // Passamos os dados da máquina para o modal
       data: { machine: machineData }
     });
   }
