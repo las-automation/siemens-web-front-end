@@ -1,67 +1,40 @@
-<!-- Ficheiro: src/app/pages/daily-report/daily-report.html -->
-<div class="report-container">
-  <h1>Relatório Diário de Produção</h1>
-  <p class="report-date">Data: 14 de Julho de 2025</p>
+<div class="container">
 
-  <div class="actions-header">
-    <app-save-button (saveClicked)="salvarRelatorio()"></app-save-button>
-  </div>
-  <!-- Secção de KPIs com Cards -->
-  <div class="kpi-grid">
-    @if (maquinaMaisTrabalhadora) {
-      <mat-card>
-        <mat-card-header>
-          <mat-card-title>Máquina Mais Produtiva</mat-card-title>
-          <mat-card-subtitle>Equipamento com mais horas de operação</mat-card-subtitle>
-        </mat-card-header>
-        <mat-card-content>
-            <p class="kpi-value">{{ maquinaMaisTrabalhadora.nomeMaquina }}</p>
-            <p class="kpi-sub-value">{{ maquinaMaisTrabalhadora.horasTrabalhadas.toFixed(1) }} horas</p>
-        </mat-card-content>
-      </mat-card>
-    } @else {
-      <mat-card>
-        <mat-card-header>
-          <mat-card-title>Máquina Mais Produtiva</mat-card-title>
-        </mat-card-header>
-        <mat-card-content>
-          <p class="kpi-value">Calculando...</p>
-        </mat-card-content>
-      </mat-card>
-    }
-    <mat-card>
-      <mat-card-header>
-        <mat-card-title>Consumo Total de Corrente</mat-card-title>
-        <mat-card-subtitle>Soma de todos os equipamentos</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <p class="kpi-value">{{ consumoTotalCorrente.toFixed(2) }} kWh</p>
-      </mat-card-content>
-    </mat-card>
+  <mat-card class="kpi-container">
+    <!-- Removida a seção 'Máquina Mais Produtiva' -->
 
-    <mat-card>
-      <mat-card-header>
-        <mat-card-title>Eficiência Média da Planta</mat-card-title>
-        <mat-card-subtitle>Média de todas as máquinas</mat-card-subtitle>
-      </mat-card-header>
-      <mat-card-content>
-        <p class="kpi-value">{{ eficienciaMedia.toFixed(2) }} %</p>
-      </mat-card-content>
-    </mat-card>
+    <div class="kpi-card">
+      <mat-icon class="kpi-icon">flash_on</mat-icon>
+      <div>
+        <p class="kpi-title">Consumo Total</p>
+        <p class="kpi-value">{{ consumoTotalCorrente.toFixed(2) }} A</p>
+        <p class="kpi-sub-value">Corrente somada</p>
+      </div>
+    </div>
 
-  <mat-card>
-    <mat-card-header>
-      <mat-card-title>Alertas no Dia</mat-card-title>
-      <mat-card-subtitle>Máquinas com anomalias ou paradas</mat-card-subtitle>
-    </mat-card-header>
-    <mat-card-content>
-      <p class="kpi-value">{{ alertasNoDia }}</p>
-    </mat-card-content>
+    <div class="kpi-card">
+      <mat-icon class="kpi-icon">trending_up</mat-icon>
+      <div>
+        <p class="kpi-title">Eficiência Média</p>
+        <p class="kpi-value">{{ eficienciaMedia.toFixed(1) }}%</p>
+        <p class="kpi-sub-value">Média geral</p>
+      </div>
+    </div>
+
+    <div class="kpi-card">
+      <mat-icon class="kpi-icon">warning</mat-icon>
+      <div>
+        <p class="kpi-title">Alertas no Dia</p>
+        <p class="kpi-value">{{ alertasNoDia }}</p>
+        <p class="kpi-sub-value">Registos críticos</p>
+      </div>
+    </div>
   </mat-card>
-</div>
+
   <!-- Tabela com os dados detalhados -->
+  <!-- CORREÇÃO: Passando [reportData]="latestReport" para o componente filho -->
   <app-machines-report 
-    [reportData]="reportData"
+    [reportData]="latestReport" 
     (viewChartClicked)="abrirGrafico($event)">
   </app-machines-report>
 </div>

@@ -1,88 +1,71 @@
-  <!-- Tabela com os dados detalhados -->
-  <h2>Detalhes por Máquina</h2>
-<table mat-table [dataSource]="reportData" class="mat-elevation-z8">
+<h2>Detalhes do Último Relatório</h2>
+<!-- 
+  O truque está aqui: [dataSource]="[reportData]".
+  Como a Mat-Table espera um array, nós criamos um array contendo
+  o nosso único objeto 'reportData'.
+-->
+<table mat-table [dataSource]="reportData ? [reportData] : []" class="mat-elevation-z8" *ngIf="reportData">
 
-  <!-- Coluna: Máquina -->
-  <ng-container matColumnDef="nomeMaquina">
-    <th mat-header-cell *matHeaderCellDef> Máquina </th>
-    <td mat-cell *matCellDef="let element"> {{element.nomeMaquina}} </td>
+  <!-- Coluna: Data e Hora -->
+  <ng-container matColumnDef="data_hora">
+    <th mat-header-cell *matHeaderCellDef> Data e Hora </th>
+    <td mat-cell *matCellDef="let element"> {{element.data_hora | date:'dd/MM/yyyy HH:mm:ss'}} </td>
   </ng-container>
 
-  <!-- Coluna: Status -->
-  <ng-container matColumnDef="status">
-    <th mat-header-cell *matHeaderCellDef> Status </th>
-    <td mat-cell *matCellDef="let element"> {{element.status}} </td>
+  <!-- Coluna: Nível Conz1 -->
+  <ng-container matColumnDef="conz1_nivel">
+    <th mat-header-cell *matHeaderCellDef> Nível Conz1 </th>
+    <td mat-cell *matCellDef="let element"> {{element.conz1_nivel.toFixed(2)}} </td>
   </ng-container>
 
-  <!-- Coluna: Corrente -->
-  <ng-container matColumnDef="corrente">
-    <th mat-header-cell *matHeaderCellDef> Corrente (A) </th>
-    <td mat-cell *matCellDef="let element"> {{element.corrente.toFixed(2)}} A </td>
+  <!-- Coluna: Nível Conz2 -->
+  <ng-container matColumnDef="conz2_nivel">
+    <th mat-header-cell *matHeaderCellDef> Nível Conz2 </th>
+    <td mat-cell *matCellDef="let element"> {{element.conz2_nivel.toFixed(2)}} </td>
   </ng-container>
 
   <!-- Coluna: Temperatura -->
-  <ng-container matColumnDef="temperatura">
+  <ng-container matColumnDef="tem2_c">
     <th mat-header-cell *matHeaderCellDef> Temp. (°C) </th>
-    <td mat-cell *matCellDef="let element"> {{element.temperatura.toFixed(1)}} °C </td>
+    <td mat-cell *matCellDef="let element"> {{element.tem2_c.toFixed(1)}} °C </td>
   </ng-container>
 
-  <!-- Coluna: Nível -->
-  <ng-container matColumnDef="nivel">
-    <th mat-header-cell *matHeaderCellDef> Nível (%) </th>
-    <td mat-cell *matCellDef="let element"> {{element.nivel.toFixed(1)}}% </td>
-  </ng-container>
-
-  <!-- Coluna: Horas Trabalhadas -->
-  <ng-container matColumnDef="horasTrabalhadas">
-    <th mat-header-cell *matHeaderCellDef> Horas Ativas </th>
-    <td mat-cell *matCellDef="let element"> {{element.horasTrabalhadas.toFixed(1)}}h </td>
-  </ng-container>
-
-  <!-- Coluna: Horas Inativas -->
-  <ng-container matColumnDef="horasInativas">
-    <th mat-header-cell *matHeaderCellDef> Horas Inativas </th>
-    <td mat-cell *matCellDef="let element"> {{element.horasInativas.toFixed(1)}}h </td>
+  <!-- Coluna: Corrente Pre1 -->
+  <ng-container matColumnDef="pre1_amp">
+    <th mat-header-cell *matHeaderCellDef> Corrente Pre1 (A) </th>
+    <td mat-cell *matCellDef="let element"> {{element.pre1_amp.toFixed(2)}} A </td>
   </ng-container>
   
-  <!-- Coluna: Dias Trabalhados -->
-  <ng-container matColumnDef="diasTrabalhados">
-    <th mat-header-cell *matHeaderCellDef> Dias Operando </th>
-    <td mat-cell *matCellDef="let element"> {{element.diasTrabalhados}} </td>
+  <!-- Adicione as outras colunas (pre2_amp, pre3_amp, pre4_amp, q90h, usuario) seguindo o mesmo padrão -->
+  <ng-container matColumnDef="pre2_amp">
+    <th mat-header-cell *matHeaderCellDef> Corrente Pre2 (A) </th>
+    <td mat-cell *matCellDef="let element"> {{element.pre2_amp.toFixed(2)}} A </td>
   </ng-container>
 
-  <!-- Coluna: Eficiência -->
-  <ng-container matColumnDef="eficiencia">
-    <th mat-header-cell *matHeaderCellDef> Eficiência (%) </th>
-    <td mat-cell *matCellDef="let element"> {{element.eficiencia.toFixed(1)}}% </td>
+  <ng-container matColumnDef="pre3_amp">
+    <th mat-header-cell *matHeaderCellDef> Corrente Pre3 (A) </th>
+    <td mat-cell *matCellDef="let element"> {{element.pre3_amp.toFixed(2)}} A </td>
   </ng-container>
 
-  <!-- Coluna: Próx. Manutenção -->
-  <ng-container matColumnDef="proximaManutencao">
-    <th mat-header-cell *matHeaderCellDef> Próx. Manutenção </th>
-    <td mat-cell *matCellDef="let element">
-      <!-- Aqui podemos usar o componente <app-maintenance-status> no futuro -->
-      <div class="manutencao-container">
-        <span>{{element.proximaManutencao}} dias</span>
-        <div class="progress-bar-background">
-          <div class="progress-bar-fill"
-               [style.width.%]="(element.proximaManutencao / 90) * 100"
-               [ngClass]="getManutencaoStatus(element.proximaManutencao)">
-          </div>
-        </div>
-      </div>
-    </td>
+  <ng-container matColumnDef="pre4_amp">
+    <th mat-header-cell *matHeaderCellDef> Corrente Pre4 (A) </th>
+    <td mat-cell *matCellDef="let element"> {{element.pre4_amp.toFixed(2)}} A </td>
   </ng-container>
 
-  <!-- Coluna: Ações -->
-  <ng-container matColumnDef="grafico">
-    <th mat-header-cell *matHeaderCellDef> Gráfico </th>
-    <td mat-cell *matCellDef="let element">
-      <button mat-icon-button color="primary" (click)="onAbrirGrafico(element)">
-        <mat-icon>show_chart</mat-icon>
-      </button>
-    </td>
+  <ng-container matColumnDef="q90h">
+    <th mat-header-cell *matHeaderCellDef> Eficiência (q90h) </th>
+    <td mat-cell *matCellDef="let element"> {{element.q90h.toFixed(1)}}% </td>
+  </ng-container>
+
+  <ng-container matColumnDef="usuario">
+    <th mat-header-cell *matHeaderCellDef> Usuário </th>
+    <td mat-cell *matCellDef="let element"> {{element.usuario}} </td>
   </ng-container>
 
   <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
   <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
 </table>
+
+<div *ngIf="!reportData" class="loading-message">
+  A aguardar o primeiro relatório...
+</div>
