@@ -14,73 +14,49 @@ export class ReportDataService {
 
   constructor(private http: HttpClient) { }
 
-  /**
-   * Busca a lista completa e retorna o primeiro item.
-   */
   getLatestReport(): Observable<SingleReportData> {
     const token = localStorage.getItem('user_token');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
     return this.http.get<SingleReportData[]>(this.API_URL, { headers }).pipe(
-      map(reports => {
-        if (!reports || reports.length === 0) {
-          return null as any;
-        }
-        return reports[0];
-      }),
+      map(reports => (!reports || reports.length === 0) ? null as any : reports[0]),
       tap(data => console.log('Serviço: Primeiro relatório da lista recebido:', data)),
-      catchError(this.handleError)
-    );
-  }
-  
-  /**
-   * Busca um relatório específico por data e hora (requer endpoint no backend).
-   */
-  getReportByDateTime(dateTimeString: string): Observable<SingleReportData> {
-    const token = localStorage.getItem('user_token');
-    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-    const encodedDateTime = encodeURIComponent(dateTimeString);
-    const url = `${this.API_URL}/by-date/${encodedDateTime}`;
-    
-    return this.http.get<SingleReportData>(url, { headers }).pipe(
-      tap(data => console.log(`Serviço: Relatório para ${dateTimeString} recebido.`, data)),
       catchError(this.handleError)
     );
   }
 
   /**
-   * ATUALIZADO: Busca TODOS os relatórios e os filtra por data/hora no FRONTEND.
-   * @param startDateTime A data e hora de início no formato 'YYYY-MM-DD HH:MM:SS'.
-   * @param endDateTime A data e hora de fim no formato 'YYYY-MM-DD HH:MM:SS'.
-   * @returns Um Observable que emite um array de relatórios filtrados.
+   * CORRIGIDO: Busca TODOS os relatórios e os filtra por data/hora no FRONTEND,
+   * entendendo que a data vem como um array de números.
    */
   getReportsByDateTimeRange(startDateTime: string, endDateTime: string): Observable<SingleReportData[]> {
     const token = localStorage.getItem('user_token');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
-    // 1. Busca o array COMPLETO de relatórios, que a sua API já fornece.
     return this.http.get<SingleReportData[]>(this.API_URL, { headers }).pipe(
       map(allReports => {
-        if (!allReports) {
-          return []; // Retorna array vazio se a resposta da API for nula.
-        }
+        if (!allReports) return [];
 
-        // 2. Converte as strings do filtro para objetos Date para uma comparação segura.
         const startDate = new Date(startDateTime);
         const endDate = new Date(endDateTime);
 
-        // 3. Filtra o array aqui mesmo, no frontend.
         return allReports.filter(report => {
-          const reportDate = new Date(report.data_hora);
-          // A condição retorna 'true' apenas para os relatórios dentro do intervalo.
+          // Converte o array da API para um objeto Date do JavaScript
+          const dt = report.data_hora;
+          // new Date(ano, mês - 1, dia, hora, minuto, segundo)
+          const reportDate = new Date(dt[0], dt[1] - 1, dt[2], dt[3], dt[4], dt[5]);
+          
           return reportDate >= startDate && reportDate <= endDate;
         });
       }),
-      tap(filteredData => console.log(`Serviço: ${filteredData.length} relatórios encontrados no intervalo (filtro no frontend).`)),
+      tap(filteredData => console.log(`Serviço: ${filteredData.length} relatórios encontrados (filtro no frontend).`)),
       catchError(this.handleError)
     );
   }
-
+  
+  /**
+   * CORRIGIDO: Método adicionado de volta para compatibilidade.
+   */
   getReportHistory(): Observable<HistoryDetailsModal[]> {
     console.log('A buscar dados mocados do histórico...');
     const mockHistory: HistoryDetailsModal[] = [
@@ -93,8 +69,8 @@ export class ReportDataService {
     if (error.status === 401) {
       console.error('Erro de Autenticação! O token pode ser inválido ou ter expirado.', error);
     } else {
-      console.error(`Ocorreu um erro na comunicação com a API! Código ${error.status}, ` + `body: ${JSON.stringify(error.error)}`);
+      console.error(`Erro na API! Código ${error.status}, body: ${JSON.stringify(error.error)}`);
     }
-    return throwError(() => new Error('Falha na comunicação com o servidor. Por favor, tente novamente mais tarde.'));
+    return throwError(() => new Error('Falha na comunicação com o servidor.'));
   }
 }
