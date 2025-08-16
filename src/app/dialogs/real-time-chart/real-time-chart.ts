@@ -5,7 +5,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { Subscription } from 'rxjs';
 import { ChartConfiguration } from 'chart.js';
 
-import { DailyReportData } from '../../modal/daily-report-data/daily-report-data';
+// 1. Importamos a NOVA interface de dados
+import { SingleReportData } from '../../modal/single-report-data/single-report-data';
 import { RealTimeDataService } from '../../services/report-data-time.service';
 import { LineChartComponent } from '../../components/line-chart.component/line-chart.component';
 
@@ -31,7 +32,8 @@ export class RealTimeChartComponent implements OnInit, OnDestroy {
 
   constructor(
     public dialogRef: MatDialogRef<RealTimeChartComponent>,
-    @Inject(MAT_DIALOG_DATA) public machineData: { machine: DailyReportData },
+    // 2. O dado injetado agora é do tipo SingleReportData (opcional, pois o serviço busca o último)
+    @Inject(MAT_DIALOG_DATA) public initialReportData: { report: SingleReportData },
     private realTimeService: RealTimeDataService
   ) {
     this.initializeCharts();
@@ -42,7 +44,7 @@ export class RealTimeChartComponent implements OnInit, OnDestroy {
       labels: [],
       datasets: [{
         data: [],
-        label: `Corrente (A)`,
+        label: `Corrente Total (A)`, // Label atualizado
         borderColor: '#005a9c',
         backgroundColor: 'rgba(0, 90, 156, 0.2)',
         fill: true
@@ -61,40 +63,37 @@ export class RealTimeChartComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    // Subscrição para os dados de corrente
+    // 3. CORREÇÃO: Chamamos o método SEM argumentos
     this.currentSubscription = this.realTimeService
-      .getRealTimeCurrentData(this.machineData.machine.nomeMaquina)
+      .getRealTimeCurrentData() // <--- Argumento removido
       .subscribe(value => {
-        const dataArray = this.currentChartData.datasets[0].data as (number | null)[];
-        // CORREÇÃO: Usamos uma afirmação de tipo 'as' para o array de labels
-        const labelsArray = (this.currentChartData.labels || []) as (string | Date)[];
+        const dataArray = this.currentChartData.datasets[0].data as number[];
+        const labelsArray = (this.currentChartData.labels || []) as string[];
         
         this.updateChartData(dataArray, labelsArray, value);
-
         this.currentChartData = { ...this.currentChartData };
       });
 
-    // Subscrição para os dados de temperatura
+    // 4. CORREÇÃO: Chamamos o método SEM argumentos
     this.tempSubscription = this.realTimeService
-      .getRealTimeTemperatureData(this.machineData.machine.nomeMaquina)
+      .getRealTimeTemperatureData() // <--- Argumento removido
       .subscribe(value => {
-        const dataArray = this.temperatureChartData.datasets[0].data as (number | null)[];
-        // CORREÇÃO: E aqui também
-        const labelsArray = (this.temperatureChartData.labels || []) as (string | Date)[];
+        const dataArray = this.temperatureChartData.datasets[0].data as number[];
+        const labelsArray = (this.temperatureChartData.labels || []) as string[];
         
         this.updateChartData(dataArray, labelsArray, value);
-        
         this.temperatureChartData = { ...this.temperatureChartData };
       });
   }
 
-  updateChartData(data: (number | null)[], labels: (string | Date)[], value: number): void {
+  updateChartData(data: number[], labels: string[], value: number): void {
     const now = new Date();
     const timestamp = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
 
     labels.push(timestamp);
     data.push(value);
 
+    // Mantém o gráfico com no máximo 20 pontos de dados
     if (labels.length > 20) {
       labels.shift();
       data.shift();
