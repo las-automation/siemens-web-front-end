@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+
 import { SingleReportData } from '../../modal/single-report-data/single-report-data'; 
 import { ReportDataService } from '../../services/report-data'; 
 
@@ -28,6 +29,7 @@ export class DailyReportComponent implements OnInit {
   private allReports: SingleReportData[] = [];
   public dadosExibidos: SingleReportData[] = [];
   public isLoading: boolean = true;
+
   public startDate: Date | null = null;
   public endDate: Date | null = null;
   
@@ -35,7 +37,6 @@ export class DailyReportComponent implements OnInit {
   eficienciaMedia = 0;
   alertasNoDia = 0;
 
-  // ATUALIZADO: Nomes de colunas em camelCase para corresponder à interface e API
   displayedColumns: string[] = [
     'reportId', 'dataHora', 'usuario', 'tem2C', 'q90h', 
     'conz1Nivel', 'conz2Nivel', 'pre1Amp', 'pre2Amp', 
@@ -46,10 +47,18 @@ export class DailyReportComponent implements OnInit {
 
   ngOnInit(): void {
     this.reportService.loadAllReports().subscribe(reports => {
-      this.allReports = reports;
-      this.dadosExibidos = this.allReports;
+      // ATUALIZADO: Ordena os relatórios por data, do mais recente para o mais antigo
+      const sortedReports = reports.sort((a, b) => {
+        const dateA = this.formatarData(a.dataHora)?.getTime() || 0;
+        const dateB = this.formatarData(b.dataHora)?.getTime() || 0;
+        return dateB - dateA; // b - a para ordem decrescente
+      });
+
+      this.allReports = sortedReports;
+      this.dadosExibidos = this.allReports; // Exibe os dados já ordenados
       this.calcularKPIs(this.dadosExibidos);
       this.isLoading = false;
+      console.log('Dados carregados e ORDENADOS com sucesso:', this.allReports);
     });
   }
 
@@ -73,9 +82,6 @@ export class DailyReportComponent implements OnInit {
     this.calcularKPIs(this.dadosExibidos);
   }
 
-  /**
-   * CORRIGIDO: Usa os nomes de propriedade corretos (camelCase) da interface
-   */
   calcularKPIs(reports: SingleReportData[]): void {
     if (!reports || reports.length === 0) {
       this.consumoTotalCorrente = 0;
@@ -83,7 +89,7 @@ export class DailyReportComponent implements OnInit {
       this.alertasNoDia = 0;
       return;
     }
-    
+
     const reportsComEficiencia = reports.filter(r => typeof r.q90h === 'number');
     const totalReportsComEficiencia = reportsComEficiencia.length;
 
@@ -99,9 +105,6 @@ export class DailyReportComponent implements OnInit {
     return new Date(dataArray[0], dataArray[1] - 1, dataArray[2], dataArray[3], dataArray[4], dataArray[5]);
   }
 
-  /**
-   * CORRIGIDO: Usa os nomes de propriedade corretos (camelCase) da interface
-   */
   public calcularConsumoReport(report: SingleReportData): number {
     return (report.pre1Amp || 0) + (report.pre2Amp || 0) + (report.pre3Amp || 0) + (report.pre4Amp || 0);
   }
