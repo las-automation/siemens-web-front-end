@@ -2,16 +2,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
 import { Observable, of, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, tap, map } from 'rxjs/operators';
-
 import { SingleReportData } from '../modal/single-report-data/single-report-data';
-import { HistoryDetailsModal } from '../modal/history-details-modal/history-details-modal'; // Import adicionado
 
 @Injectable({
   providedIn: 'root'
 })
 export class ReportDataService {
   private readonly API_URL = 'https://siemens-web-back-end.onrender.com/reports';
-
   private reportsCache$ = new BehaviorSubject<SingleReportData[]>([]);
 
   constructor(private http: HttpClient) { }
@@ -41,7 +38,8 @@ export class ReportDataService {
         if (!allReports) return [];
         endDate.setHours(23, 59, 59, 999);
         return allReports.filter(report => {
-          const dt = report.data_hora;
+          // CORRIGIDO: Usa 'dataHora' (camelCase)
+          const dt = report.dataHora; 
           const reportDate = new Date(dt[0], dt[1] - 1, dt[2], dt[3], dt[4], dt[5]);
           return reportDate >= startDate && reportDate <= endDate;
         });
@@ -49,17 +47,6 @@ export class ReportDataService {
     );
   }
   
-  /**
-   * CORRIGIDO: Método adicionado de volta para compatibilidade com a página de histórico.
-   */
-  getReportHistory(): Observable<HistoryDetailsModal[]> {
-    console.log('A buscar dados mocados do histórico...');
-    const mockHistory: HistoryDetailsModal[] = [
-        { id: '20250714', data: '14/07/2025', resumo: 'Eficiência média: 98.2%.' },
-    ];
-    return of(mockHistory);
-  }
-
   private handleError(error: HttpErrorResponse) {
     // ... sua função de tratamento de erros ...
     return throwError(() => new Error('Falha na comunicação com o servidor.'));
