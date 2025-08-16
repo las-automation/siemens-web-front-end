@@ -1,30 +1,30 @@
-<div class="container">
+<div class="report-container">
   <!-- Seção de KPIs -->
-  <mat-card class="kpi-container">
-    <div class="kpi-card">
+  <div class="kpi-grid">
+    <mat-card class="kpi-card">
       <mat-icon class="kpi-icon">flash_on</mat-icon>
       <div>
         <p class="kpi-title">Consumo Total</p>
         <p class="kpi-value">{{ consumoTotalCorrente.toFixed(2) }} A</p>
       </div>
-    </div>
-    <div class="kpi-card">
+    </mat-card>
+    <mat-card class="kpi-card">
       <mat-icon class="kpi-icon">trending_up</mat-icon>
       <div>
         <p class="kpi-title">Eficiência Média</p>
         <p class="kpi-value">{{ eficienciaMedia.toFixed(1) }}%</p>
       </div>
-    </div>
-    <div class="kpi-card">
+    </mat-card>
+    <mat-card class="kpi-card">
       <mat-icon class="kpi-icon">warning</mat-icon>
       <div>
         <p class="kpi-title">Total de Alertas</p>
         <p class="kpi-value">{{ alertasNoDia }}</p>
       </div>
-    </div>
-  </mat-card>
+    </mat-card>
+  </div>
 
-  <!-- SEÇÃO DE FILTRO COM LAYOUT MELHORADO -->
+  <!-- SEÇÃO DE FILTRO -->
   <mat-card class="filter-card">
     <div class="filter-content">
       <mat-form-field appearance="outline" class="date-range-picker">
@@ -53,6 +53,12 @@
     <h2>Exibindo {{ dadosExibidos.length }} registos</h2>
     <table mat-table [dataSource]="dadosExibidos" class="mat-elevation-z8">
       
+      <!-- Colunas do Modal -->
+      <ng-container matColumnDef="report_id">
+        <th mat-header-cell *matHeaderCellDef> ID </th>
+        <td mat-cell *matCellDef="let row"> {{ row.report_id }} </td>
+      </ng-container>
+      
       <ng-container matColumnDef="data_hora">
         <th mat-header-cell *matHeaderCellDef> Data e Hora </th>
         <td mat-cell *matCellDef="let row"> {{ formatarData(row.data_hora) | date:'dd/MM/yyyy HH:mm:ss' }} </td>
@@ -62,23 +68,54 @@
         <th mat-header-cell *matHeaderCellDef> Usuário </th>
         <td mat-cell *matCellDef="let row"> {{ row.usuario }} </td>
       </ng-container>
-      
+
       <ng-container matColumnDef="tem2_c">
         <th mat-header-cell *matHeaderCellDef> Temp. (°C) </th>
-        <td mat-cell *matCellDef="let row"> {{ row.tem2_c.toFixed(1) }} </td>
+        <td mat-cell *matCellDef="let row"> {{ row.tem2_c?.toFixed(1) || 'N/A' }} </td>
       </ng-container>
 
       <ng-container matColumnDef="q90h">
         <th mat-header-cell *matHeaderCellDef> Eficiência (%) </th>
-        <td mat-cell *matCellDef="let row"> {{ row.q90h.toFixed(1) }} </td>
+        <td mat-cell *matCellDef="let row"> {{ row.q90h?.toFixed(1) || 'N/A' }} </td>
       </ng-container>
 
-      <ng-container matColumnDef="consumo_total">
-        <th mat-header-cell *matHeaderCellDef> Consumo (A) </th>
-        <td mat-cell *matCellDef="let row"> {{ calcularConsumoReport(row).toFixed(2) }} </td>
+      <ng-container matColumnDef="conz1_nivel">
+        <th mat-header-cell *matHeaderCellDef> Nível Conz1 </th>
+        <td mat-cell *matCellDef="let row"> {{ row.conz1_nivel?.toFixed(2) || 'N/A' }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="conz2_nivel">
+        <th mat-header-cell *matHeaderCellDef> Nível Conz2 </th>
+        <td mat-cell *matCellDef="let row"> {{ row.conz2_nivel?.toFixed(2) || 'N/A' }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="pre1_amp">
+        <th mat-header-cell *matHeaderCellDef> Amp Pre1 </th>
+        <td mat-cell *matCellDef="let row"> {{ row.pre1_amp?.toFixed(2) || 'N/A' }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="pre2_amp">
+        <th mat-header-cell *matHeaderCellDef> Amp Pre2 </th>
+        <td mat-cell *matCellDef="let row"> {{ row.pre2_amp?.toFixed(2) || 'N/A' }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="pre3_amp">
+        <th mat-header-cell *matHeaderCellDef> Amp Pre3 </th>
+        <td mat-cell *matCellDef="let row"> {{ row.pre3_amp?.toFixed(2) || 'N/A' }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="pre4_amp">
+        <th mat-header-cell *matHeaderCellDef> Amp Pre4 </th>
+        <td mat-cell *matCellDef="let row"> {{ row.pre4_amp?.toFixed(2) || 'N/A' }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="excel_id">
+        <th mat-header-cell *matHeaderCellDef> Excel ID </th>
+        <td mat-cell *matCellDef="let row"> {{ row.excel_id }} </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
       <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
     </table>
   </div>
+</div>
