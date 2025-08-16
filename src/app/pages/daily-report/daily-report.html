@@ -1,12 +1,11 @@
 <div class="container">
-  <!-- ... Seção de KPIs ... -->
+  <!-- Seção de KPIs -->
   <mat-card class="kpi-container">
     <div class="kpi-card">
       <mat-icon class="kpi-icon">flash_on</mat-icon>
       <div>
         <p class="kpi-title">Consumo Total</p>
         <p class="kpi-value">{{ consumoTotalCorrente.toFixed(2) }} A</p>
-        <p class="kpi-sub-value">Corrente somada</p>
       </div>
     </div>
     <div class="kpi-card">
@@ -14,24 +13,21 @@
       <div>
         <p class="kpi-title">Eficiência Média</p>
         <p class="kpi-value">{{ eficienciaMedia.toFixed(1) }}%</p>
-        <p class="kpi-sub-value">Média geral</p>
       </div>
     </div>
     <div class="kpi-card">
       <mat-icon class="kpi-icon">warning</mat-icon>
       <div>
-        <p class="kpi-title">Alertas no Dia</p>
+        <p class="kpi-title">Total de Alertas</p>
         <p class="kpi-value">{{ alertasNoDia }}</p>
-        <p class="kpi-sub-value">Registos críticos</p>
       </div>
     </div>
   </mat-card>
 
-  <!-- ... Seção de Filtro ... -->
-  <!-- SEÇÃO DE FILTRO ATUALIZADA -->
+  <!-- SEÇÃO DE FILTRO COM LAYOUT MELHORADO -->
   <mat-card class="filter-card">
-    <mat-card-content class="filter-content">
-      <mat-form-field appearance="fill">
+    <div class="filter-content">
+      <mat-form-field appearance="outline" class="date-range-picker">
         <mat-label>Filtrar por intervalo de datas</mat-label>
         <mat-date-range-input [rangePicker]="picker">
           <input matStartDate placeholder="Data de início" [(ngModel)]="startDate">
@@ -42,43 +38,47 @@
       </mat-form-field>
 
       <div class="filter-actions">
-        <button mat-raised-button color="primary" (click)="filtrarRelatorios()">Filtrar</button>
-        <button mat-stroked-button color="accent" (click)="limparFiltro()" *ngIf="modoFiltro">Limpar Filtro</button>
+        <button mat-flat-button color="primary" (click)="filtrarRelatorios()">Filtrar</button>
+        <button mat-stroked-button (click)="limparFiltro()">Limpar Filtro</button>
       </div>
-    </mat-card-content>
+    </div>
   </mat-card>
 
-  <!-- EXIBIÇÃO CONDICIONAL DOS DADOS -->
+  <!-- TABELA ÚNICA DE EXIBIÇÃO -->
   <div *ngIf="isLoading" class="loading-message">
-    A carregar dados...
+    A carregar todos os relatórios...
   </div>
 
   <div *ngIf="!isLoading">
-    <!-- Mostra o componente de tempo real se NÃO estiver em modo de filtro -->
-    <div *ngIf="!modoFiltro">
-      <app-machines-report [reportData]="latestReport"></app-machines-report>
-    </div>
+    <h2>Exibindo {{ dadosExibidos.length }} registos</h2>
+    <table mat-table [dataSource]="dadosExibidos" class="mat-elevation-z8">
+      
+      <ng-container matColumnDef="data_hora">
+        <th mat-header-cell *matHeaderCellDef> Data e Hora </th>
+        <td mat-cell *matCellDef="let row"> {{ formatarData(row.data_hora) | date:'dd/MM/yyyy HH:mm:ss' }} </td>
+      </ng-container>
+      
+      <ng-container matColumnDef="usuario">
+        <th mat-header-cell *matHeaderCellDef> Usuário </th>
+        <td mat-cell *matCellDef="let row"> {{ row.usuario }} </td>
+      </ng-container>
+      
+      <ng-container matColumnDef="tem2_c">
+        <th mat-header-cell *matHeaderCellDef> Temp. (°C) </th>
+        <td mat-cell *matCellDef="let row"> {{ row.tem2_c.toFixed(1) }} </td>
+      </ng-container>
 
-    <!-- Mostra a tabela de resultados filtrados se ESTIVER em modo de filtro -->
-    <div *ngIf="modoFiltro">
-      <h2>Resultados do Filtro ({{ relatoriosFiltrados.length }} registos)</h2>
-      <table mat-table [dataSource]="relatoriosFiltrados" class="mat-elevation-z8">
-        <!-- ... Colunas da tabela ... -->
-        <ng-container matColumnDef="data_hora">
-          <th mat-header-cell *matHeaderCellDef> Data e Hora </th>
-          <td mat-cell *matCellDef="let row"> {{ formatarData(row.data_hora) | date:'dd/MM/yyyy HH:mm:ss' }} </td>
-        </ng-container>
-        <ng-container matColumnDef="usuario">
-          <th mat-header-cell *matHeaderCellDef> Usuário </th>
-          <td mat-cell *matCellDef="let row"> {{ row.usuario }} </td>
-        </ng-container>
-        <ng-container matColumnDef="tem2_c">
-          <th mat-header-cell *matHeaderCellDef> Temperatura </th>
-          <td mat-cell *matCellDef="let row"> {{ row.tem2_c.toFixed(1) }} °C </td>
-        </ng-container>
-        <tr mat-header-row *matHeaderRowDef="['data_hora', 'usuario', 'tem2_c']"></tr>
-        <tr mat-row *matRowDef="let row; columns: ['data_hora', 'usuario', 'tem2_c'];"></tr>
-      </table>
-    </div>
+      <ng-container matColumnDef="q90h">
+        <th mat-header-cell *matHeaderCellDef> Eficiência (%) </th>
+        <td mat-cell *matCellDef="let row"> {{ row.q90h.toFixed(1) }} </td>
+      </ng-container>
+
+      <ng-container matColumnDef="consumo_total">
+        <th mat-header-cell *matHeaderCellDef> Consumo (A) </th>
+        <td mat-cell *matCellDef="let row"> {{ calcularConsumoReport(row).toFixed(2) }} </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
   </div>
-</div>
