@@ -1,15 +1,15 @@
 // Em: src/app/modal/single-report-data/single-report-data.ts
 export interface SingleReportData {
-  report_id: number;
-  conz1_nivel: number;
-  conz2_nivel: number;
-  data_hora: number[]; // ATUALIZADO: De string para array de números
-  excel_id: number;
-  pre1_amp: number;
-  pre2_amp: number;
-  pre3_amp: number;
-  pre4_amp: number;
+  reportId: number;
+  conz1Nivel: number;
+  conz2Nivel: number;
+  dataHora: number[];
+  excelId: number;
+  pre1Amp: number;
+  pre2Amp: number;
+  pre3Amp: number;
+  pre4Amp: number;
   q90h: number;
-  tem2_c: number;
+  tem2C: number;
   usuario: string;
 }

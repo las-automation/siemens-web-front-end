@@ -9,7 +9,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-
 import { SingleReportData } from '../../modal/single-report-data/single-report-data'; 
 import { ReportDataService } from '../../services/report-data'; 
 
@@ -29,7 +28,6 @@ export class DailyReportComponent implements OnInit {
   private allReports: SingleReportData[] = [];
   public dadosExibidos: SingleReportData[] = [];
   public isLoading: boolean = true;
-
   public startDate: Date | null = null;
   public endDate: Date | null = null;
   
@@ -37,11 +35,11 @@ export class DailyReportComponent implements OnInit {
   eficienciaMedia = 0;
   alertasNoDia = 0;
 
-  // ATUALIZADO: Adicionadas todas as colunas do seu modal
+  // ATUALIZADO: Nomes de colunas em camelCase para corresponder à interface e API
   displayedColumns: string[] = [
-    'report_id', 'data_hora', 'usuario', 'tem2_c', 'q90h', 
-    'conz1_nivel', 'conz2_nivel', 'pre1_amp', 'pre2_amp', 
-    'pre3_amp', 'pre4_amp', 'excel_id'
+    'reportId', 'dataHora', 'usuario', 'tem2C', 'q90h', 
+    'conz1Nivel', 'conz2Nivel', 'pre1Amp', 'pre2Amp', 
+    'pre3Amp', 'pre4Amp', 'excelId'
   ];
 
   constructor(private reportService: ReportDataService) {}
@@ -52,7 +50,6 @@ export class DailyReportComponent implements OnInit {
       this.dadosExibidos = this.allReports;
       this.calcularKPIs(this.dadosExibidos);
       this.isLoading = false;
-      console.log('Dados carregados com sucesso no componente:', this.allReports);
     });
   }
 
@@ -77,8 +74,7 @@ export class DailyReportComponent implements OnInit {
   }
 
   /**
-   * ATUALIZADO: A função agora ignora valores nulos para cálculos de média,
-   * tornando o resultado dos KPIs mais preciso.
+   * CORRIGIDO: Usa os nomes de propriedade corretos (camelCase) da interface
    */
   calcularKPIs(reports: SingleReportData[]): void {
     if (!reports || reports.length === 0) {
@@ -88,7 +84,6 @@ export class DailyReportComponent implements OnInit {
       return;
     }
     
-    // Filtra relatórios que têm um valor de eficiência válido para o cálculo da média
     const reportsComEficiencia = reports.filter(r => typeof r.q90h === 'number');
     const totalReportsComEficiencia = reportsComEficiencia.length;
 
@@ -96,7 +91,7 @@ export class DailyReportComponent implements OnInit {
     const totalEficiencia = reportsComEficiencia.reduce((acc, report) => acc + (report.q90h || 0), 0);
     
     this.eficienciaMedia = totalReportsComEficiencia > 0 ? totalEficiencia / totalReportsComEficiencia : 0;
-    this.alertasNoDia = reports.filter(report => (report.tem2_c || 0) > 90.0).length;
+    this.alertasNoDia = reports.filter(report => (report.tem2C || 0) > 90.0).length;
   }
 
   public formatarData(dataArray: number[]): Date | null {
@@ -104,7 +99,10 @@ export class DailyReportComponent implements OnInit {
     return new Date(dataArray[0], dataArray[1] - 1, dataArray[2], dataArray[3], dataArray[4], dataArray[5]);
   }
 
+  /**
+   * CORRIGIDO: Usa os nomes de propriedade corretos (camelCase) da interface
+   */
   public calcularConsumoReport(report: SingleReportData): number {
-    return (report.pre1_amp || 0) + (report.pre2_amp || 0) + (report.pre3_amp || 0) + (report.pre4_amp || 0);
+    return (report.pre1Amp || 0) + (report.pre2Amp || 0) + (report.pre3Amp || 0) + (report.pre4Amp || 0);
   }
 }
