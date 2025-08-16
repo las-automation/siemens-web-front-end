@@ -12,8 +12,6 @@ import { MatNativeDateModule } from '@angular/material/core';
 
 import { SingleReportData } from '../../modal/single-report-data/single-report-data'; 
 import { ReportDataService } from '../../services/report-data'; 
-// O componente MachinesReport não é mais necessário aqui, pois vamos usar uma tabela local
-// import { MachinesReport } from "../../features/machines-report/machines-report";
 
 @Component({
   selector: 'app-daily-report',
@@ -28,32 +26,31 @@ import { ReportDataService } from '../../services/report-data';
 })
 export class DailyReportComponent implements OnInit {
   
-  // 1. Nova propriedade para guardar TODOS os relatórios do cache
   private allReports: SingleReportData[] = [];
-  // 2. Nova propriedade para os dados que são efetivamente exibidos na tabela
   public dadosExibidos: SingleReportData[] = [];
-  
   public isLoading: boolean = true;
 
-  // Propriedades para o seletor de datas
   public startDate: Date | null = null;
   public endDate: Date | null = null;
   
-  // KPIs
   consumoTotalCorrente = 0;
   eficienciaMedia = 0;
   alertasNoDia = 0;
 
-  // Colunas da tabela
-  displayedColumns: string[] = ['data_hora', 'usuario', 'tem2_c', 'q90h', 'consumo_total'];
+  // ATUALIZADO: Adicionadas todas as colunas do seu modal
+  displayedColumns: string[] = [
+    'report_id', 'data_hora', 'usuario', 'tem2_c', 'q90h', 
+    'conz1_nivel', 'conz2_nivel', 'pre1_amp', 'pre2_amp', 
+    'pre3_amp', 'pre4_amp', 'excel_id'
+  ];
 
   constructor(private reportService: ReportDataService) {}
 
   ngOnInit(): void {
     this.reportService.loadAllReports().subscribe(reports => {
       this.allReports = reports;
-      this.dadosExibidos = this.allReports; // Exibe todos os dados inicialmente
-      this.calcularKPIs(this.dadosExibidos); // Calcula os KPIs para todos os dados
+      this.dadosExibidos = this.allReports;
+      this.calcularKPIs(this.dadosExibidos);
       this.isLoading = false;
     });
   }
@@ -66,21 +63,20 @@ export class DailyReportComponent implements OnInit {
     
     this.reportService.getReportsByDateRange(this.startDate, this.endDate)
       .subscribe(dados => {
-        this.dadosExibidos = dados; // Atualiza a tabela com os dados filtrados
-        this.calcularKPIs(this.dadosExibidos); // Recalcula os KPIs para os dados filtrados
+        this.dadosExibidos = dados;
+        this.calcularKPIs(this.dadosExibidos);
       });
   }
 
   limparFiltro(): void {
     this.startDate = null;
     this.endDate = null;
-    this.dadosExibidos = this.allReports; // Volta a exibir todos os dados
-    this.calcularKPIs(this.dadosExibidos); // Recalcula os KPIs para todos os dados
+    this.dadosExibidos = this.allReports;
+    this.calcularKPIs(this.dadosExibidos);
   }
 
   /**
-   * ATUALIZADO: A função agora recebe a lista de dados para calcular.
-   * Isso a torna mais robusta e corrige os erros de 'toFixed'.
+   * CORRIGIDO: A função agora é mais segura contra valores nulos ou indefinidos.
    */
   calcularKPIs(reports: SingleReportData[]): void {
     if (!reports || reports.length === 0) {
@@ -94,8 +90,9 @@ export class DailyReportComponent implements OnInit {
     
     this.consumoTotalCorrente = reports.reduce((acc, report) => acc + this.calcularConsumoReport(report), 0);
     const totalEficiencia = reports.reduce((acc, report) => acc + (report.q90h || 0), 0);
-    this.eficienciaMedia = totalEficiencia / totalReports;
-    this.alertasNoDia = reports.filter(report => report.tem2_c > 90.0).length;
+    // Evita divisão por zero
+    this.eficienciaMedia = totalReports > 0 ? totalEficiencia / totalReports : 0;
+    this.alertasNoDia = reports.filter(report => (report.tem2_c || 0) > 90.0).length;
   }
 
   public formatarData(dataArray: number[]): Date | null {
