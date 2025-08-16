@@ -46,12 +46,14 @@ export class DailyReportComponent implements OnInit {
 
   constructor(private reportService: ReportDataService) {}
 
-  ngOnInit(): void {
+ngOnInit(): void {
     this.reportService.loadAllReports().subscribe(reports => {
       this.allReports = reports;
       this.dadosExibidos = this.allReports;
       this.calcularKPIs(this.dadosExibidos);
       this.isLoading = false;
+      // ESTA É A LINHA QUE MOSTRA OS DADOS:
+      console.log('Dados carregados com sucesso no componente:', this.allReports);
     });
   }
 
