@@ -3,11 +3,10 @@ import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
-import { DailyReportData } from '../../modal/daily-report-data/daily-report-data'; 
-import { ReportDataService } from '../../services/report-data';
-import { MatDialog } from '@angular/material/dialog';
-import { RealTimeChartComponent } from '../../dialogs/real-time-chart/real-time-chart';
 import { MatButtonModule } from '@angular/material/button';
+
+// Importamos a nova interface
+import { SingleReportData } from '../../modal/single-report-data/single-report-data';
 
 @Component({
   selector: 'app-machines-report',
@@ -18,35 +17,35 @@ import { MatButtonModule } from '@angular/material/button';
 })
 export class MachinesReport {
 
-  @Input() reportData: DailyReportData[] = [];
-  @Output() viewChartClicked = new EventEmitter<DailyReportData>();
+  // O Input agora espera um único objeto, que pode ser nulo
+  @Input() reportData: SingleReportData | null = null;
+  @Output() viewChartClicked = new EventEmitter<SingleReportData>();
 
-  // ATUALIZAÇÃO: Adicionamos todas as colunas que vêm da API
+  // As colunas agora devem corresponder aos nomes da nova interface
   displayedColumns: string[] = [
-    'nomeMaquina', 
-    'status', 
-    'corrente', 
-    'temperatura', 
-    'nivel', 
-    'horasTrabalhadas', 
-    'horasInativas', 
-    'diasTrabalhados', 
-    'eficiencia', 
-    'proximaManutencao', 
-    'grafico'
+    'data_hora',
+    'conz1_nivel', 
+    'conz2_nivel', 
+    'tem2_c', 
+    'pre1_amp',
+    'pre2_amp',
+    'pre3_amp',
+    'pre4_amp',
+    'q90h',
+    'usuario',
+    // 'grafico' // Coluna de ações
   ];
 
   constructor() {}
 
+  // Este método pode não ser mais necessário se não houver "dias" na nova estrutura
   getManutencaoStatus(dias: number): string {
     if (dias <= 15) return 'alarme';
     if (dias <= 45) return 'atencao';
     return 'normal';
   }
 
-  onAbrirGrafico(machineData: DailyReportData): void {
-    console.log('Botão clicado no componente filho! A emitir evento...');
-    // 3. Use o emissor para "disparar" o evento para o pai, enviando os dados da máquina
+  onAbrirGrafico(machineData: SingleReportData): void {
     this.viewChartClicked.emit(machineData);
   }
 }
