@@ -46,13 +46,12 @@ export class DailyReportComponent implements OnInit {
 
   constructor(private reportService: ReportDataService) {}
 
-ngOnInit(): void {
+  ngOnInit(): void {
     this.reportService.loadAllReports().subscribe(reports => {
       this.allReports = reports;
       this.dadosExibidos = this.allReports;
       this.calcularKPIs(this.dadosExibidos);
       this.isLoading = false;
-      // ESTA É A LINHA QUE MOSTRA OS DADOS:
       console.log('Dados carregados com sucesso no componente:', this.allReports);
     });
   }
@@ -78,7 +77,8 @@ ngOnInit(): void {
   }
 
   /**
-   * CORRIGIDO: A função agora é mais segura contra valores nulos ou indefinidos.
+   * ATUALIZADO: A função agora ignora valores nulos para cálculos de média,
+   * tornando o resultado dos KPIs mais preciso.
    */
   calcularKPIs(reports: SingleReportData[]): void {
     if (!reports || reports.length === 0) {
@@ -87,13 +87,15 @@ ngOnInit(): void {
       this.alertasNoDia = 0;
       return;
     }
-
-    const totalReports = reports.length;
     
+    // Filtra relatórios que têm um valor de eficiência válido para o cálculo da média
+    const reportsComEficiencia = reports.filter(r => typeof r.q90h === 'number');
+    const totalReportsComEficiencia = reportsComEficiencia.length;
+
     this.consumoTotalCorrente = reports.reduce((acc, report) => acc + this.calcularConsumoReport(report), 0);
-    const totalEficiencia = reports.reduce((acc, report) => acc + (report.q90h || 0), 0);
-    // Evita divisão por zero
-    this.eficienciaMedia = totalReports > 0 ? totalEficiencia / totalReports : 0;
+    const totalEficiencia = reportsComEficiencia.reduce((acc, report) => acc + (report.q90h || 0), 0);
+    
+    this.eficienciaMedia = totalReportsComEficiencia > 0 ? totalEficiencia / totalReportsComEficiencia : 0;
     this.alertasNoDia = reports.filter(report => (report.tem2_c || 0) > 90.0).length;
   }
 
