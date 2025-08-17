@@ -46,29 +46,43 @@ export class DailyReportComponent implements OnInit {
   constructor(private reportService: ReportDataService) {}
 
     ngOnInit(): void {
-    // Usamos um setTimeout como uma solução simples para esperar que o token seja guardado.
-    // Uma solução mais avançada usaria um serviço de autenticação com Observables.
-    setTimeout(() => {
-      this.reportService.loadAllReports().subscribe({
-        next: (reports) => {
-          const sortedReports = reports.sort((a, b) => {
-            const dateA = this.formatarData(a.dataHora)?.getTime() || 0;
-            const dateB = this.formatarData(b.dataHora)?.getTime() || 0;
-            return dateB - dateA;
-          });
+    this.waitForTokenAndLoadData();
+  }
 
-          this.allReports = sortedReports;
-          this.dadosExibidos = this.allReports;
-          this.calcularKPIs(this.dadosExibidos);
-          this.isLoading = false;
-          console.log('Dados carregados e ORDENADOS com sucesso:', this.allReports);
-        },
-        error: (err) => {
-          console.error('Falha ao carregar os relatórios no componente:', err);
-          this.isLoading = false; // Garante que a mensagem de "loading" desapareça mesmo com erro.
-        }
-      });
-    }, 500); // Espera 500 milissegundos
+  waitForTokenAndLoadData(): void {
+    // Esta função verifica se o token existe.
+    if (localStorage.getItem('user_token')) {
+      // Se o token já existe, carrega os dados imediatamente.
+      this.loadInitialData();
+    } else {
+      // Se o token não existe, espera um pouco e tenta novamente.
+      console.log('A aguardar pelo token de autenticação...');
+      setTimeout(() => {
+        this.waitForTokenAndLoadData(); // Tenta novamente após 100ms
+      }, 100);
+    }
+  }
+
+  loadInitialData(): void {
+    this.reportService.loadAllReports().subscribe({
+      next: (reports) => {
+        const sortedReports = reports.sort((a, b) => {
+          const dateA = this.formatarData(a.dataHora)?.getTime() || 0;
+          const dateB = this.formatarData(b.dataHora)?.getTime() || 0;
+          return dateB - dateA;
+        });
+
+        this.allReports = sortedReports;
+        this.dadosExibidos = this.allReports;
+        this.calcularKPIs(this.dadosExibidos);
+        this.isLoading = false;
+        console.log('Dados carregados e ORDENADOS com sucesso:', this.allReports);
+      },
+      error: (err) => {
+        console.error('Falha ao carregar os relatórios no componente:', err);
+        this.isLoading = false;
+      }
+    });
   }
 
   filtrarRelatorios(): void {
