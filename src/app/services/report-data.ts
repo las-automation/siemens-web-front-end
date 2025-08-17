@@ -15,11 +15,11 @@ export class ReportDataService {
 
   loadAllReports(): Observable<SingleReportData[]> {
     const token = localStorage.getItem('user_token');
-    // Log de depuração para ver o token
-    console.log('Serviço: A tentar carregar relatórios com o token:', token);
+    
+    // O console.log do token foi removido daqui.
 
     if (!token) {
-      console.error('Serviço: Token não encontrado! O pedido será cancelado.');
+      console.error('Serviço: Token não encontrado!');
       return throwError(() => new Error('Token de autenticação não encontrado.'));
     }
 
@@ -46,8 +46,7 @@ export class ReportDataService {
         if (!allReports) return [];
         endDate.setHours(23, 59, 59, 999);
         return allReports.filter(report => {
-          // CORRIGIDO: Usa 'dataHora' (camelCase)
-          const dt = report.dataHora; 
+          const dt = report.dataHora;
           const reportDate = new Date(dt[0], dt[1] - 1, dt[2], dt[3], dt[4], dt[5]);
           return reportDate >= startDate && reportDate <= endDate;
         });

@@ -59,9 +59,11 @@
   padding: 8px 16px;
 }
 
+/* ATUALIZADO: O seletor de data agora tem um tamanho máximo */
 .date-range-picker {
   flex-grow: 1;
-  min-width: 300px;
+  max-width: 400px; /* Define um limite para o tamanho do input */
+  min-width: 280px;
 }
 
 .filter-actions {
