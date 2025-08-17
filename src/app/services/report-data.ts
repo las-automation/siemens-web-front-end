@@ -15,6 +15,14 @@ export class ReportDataService {
 
   loadAllReports(): Observable<SingleReportData[]> {
     const token = localStorage.getItem('user_token');
+    // Log de depuração para ver o token
+    console.log('Serviço: A tentar carregar relatórios com o token:', token);
+
+    if (!token) {
+      console.error('Serviço: Token não encontrado! O pedido será cancelado.');
+      return throwError(() => new Error('Token de autenticação não encontrado.'));
+    }
+
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
     return this.http.get<SingleReportData[]>(this.API_URL, { headers }).pipe(
@@ -47,8 +55,12 @@ export class ReportDataService {
     );
   }
   
-  private handleError(error: HttpErrorResponse) {
-    // ... sua função de tratamento de erros ...
+    private handleError(error: HttpErrorResponse) {
+    if (error.status === 401) {
+      console.error('Erro de Autenticação (401)! O token pode ser inválido ou ter expirado.', error);
+    } else {
+      console.error(`Erro na API! Código ${error.status}, body: ${JSON.stringify(error.error)}`);
+    }
     return throwError(() => new Error('Falha na comunicação com o servidor.'));
   }
 }
