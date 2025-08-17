@@ -49,7 +49,6 @@ export class DailyReportComponent implements OnInit {
   constructor(private reportService: ReportDataService) {}
 
   ngOnInit(): void {
-    // A lógica de esperar pelo token e carregar os dados permanece a mesma
     this.waitForTokenAndLoadData();
   }
 

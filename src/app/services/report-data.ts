@@ -3,6 +3,7 @@ import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http
 import { Observable, of, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, tap, map } from 'rxjs/operators';
 import { SingleReportData } from '../modal/single-report-data/single-report-data';
+import { HistoryDetailsModal } from '../modal/history-details-modal/history-details-modal';
 
 @Injectable({
   providedIn: 'root'
@@ -13,11 +14,12 @@ export class ReportDataService {
 
   constructor(private http: HttpClient) { }
 
+  /**
+   * Método principal: Busca todos os relatórios da API e guarda no cache.
+   */
   loadAllReports(): Observable<SingleReportData[]> {
     const token = localStorage.getItem('user_token');
     
-    // O console.log do token foi removido daqui.
-
     if (!token) {
       console.error('Serviço: Token não encontrado!');
       return throwError(() => new Error('Token de autenticação não encontrado.'));
@@ -34,12 +36,18 @@ export class ReportDataService {
     );
   }
 
+  /**
+   * Retorna o relatório mais recente a partir do cache.
+   */
   getLatestReport(): Observable<SingleReportData | null> {
     return this.reportsCache$.pipe(
       map(reports => (!reports || reports.length === 0) ? null : reports[0])
     );
   }
 
+  /**
+   * Filtra os relatórios que já estão no cache.
+   */
   getReportsByDateRange(startDate: Date, endDate: Date): Observable<SingleReportData[]> {
     return this.reportsCache$.pipe(
       map(allReports => {
@@ -54,7 +62,18 @@ export class ReportDataService {
     );
   }
   
-    private handleError(error: HttpErrorResponse) {
+  /**
+   * Método para compatibilidade com a página de histórico.
+   */
+  getReportHistory(): Observable<HistoryDetailsModal[]> {
+    console.log('A buscar dados mocados do histórico...');
+    const mockHistory: HistoryDetailsModal[] = [
+        { id: '20250714', data: '14/07/2025', resumo: 'Eficiência média: 98.2%.' },
+    ];
+    return of(mockHistory);
+  }
+  
+  private handleError(error: HttpErrorResponse) {
     if (error.status === 401) {
       console.error('Erro de Autenticação (401)! O token pode ser inválido ou ter expirado.', error);
     } else {
