@@ -45,7 +45,8 @@ export class DailyReportComponent implements OnInit {
 
   constructor(private reportService: ReportDataService) {}
 
-    ngOnInit(): void {
+
+  ngOnInit(): void {
     this.waitForTokenAndLoadData();
   }
 
@@ -66,17 +67,14 @@ export class DailyReportComponent implements OnInit {
   loadInitialData(): void {
     this.reportService.loadAllReports().subscribe({
       next: (reports) => {
-        const sortedReports = reports.sort((a, b) => {
-          const dateA = this.formatarData(a.dataHora)?.getTime() || 0;
-          const dateB = this.formatarData(b.dataHora)?.getTime() || 0;
-          return dateB - dateA;
-        });
+        // ATUALIZADO: A ordenação agora é feita pelo 'excelId', do maior para o menor.
+        const sortedReports = reports.sort((a, b) => b.excelId - a.excelId);
 
         this.allReports = sortedReports;
         this.dadosExibidos = this.allReports;
         this.calcularKPIs(this.dadosExibidos);
         this.isLoading = false;
-        console.log('Dados carregados e ORDENADOS com sucesso:', this.allReports);
+        console.log('Dados carregados e ORDENADOS POR EXCEL ID com sucesso:', this.allReports);
       },
       error: (err) => {
         console.error('Falha ao carregar os relatórios no componente:', err);
@@ -84,7 +82,6 @@ export class DailyReportComponent implements OnInit {
       }
     });
   }
-
   filtrarRelatorios(): void {
     if (!this.startDate || !this.endDate) {
       alert('Por favor, selecione as datas de início e fim.');
