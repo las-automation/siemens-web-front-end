@@ -8,7 +8,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
+import { MatNativeDateModule, MAT_DATE_LOCALE } from '@angular/material/core'; // 1. Importe o MAT_DATE_LOCALE
 
 import { SingleReportData } from '../../modal/single-report-data/single-report-data'; 
 import { ReportDataService } from '../../services/report-data'; 
@@ -22,14 +22,17 @@ import { ReportDataService } from '../../services/report-data';
     MatDatepickerModule, MatNativeDateModule
   ],
   templateUrl: './daily-report.html',
-  styleUrl: './daily-report.css'
+  styleUrl: './daily-report.css',
+  // 2. Adicione o provider para o formato de data pt-BR
+  providers: [
+    { provide: MAT_DATE_LOCALE, useValue: 'pt-BR' }
+  ]
 })
 export class DailyReportComponent implements OnInit {
   
   private allReports: SingleReportData[] = [];
   public dadosExibidos: SingleReportData[] = [];
   public isLoading: boolean = true;
-
   public startDate: Date | null = null;
   public endDate: Date | null = null;
   
@@ -45,36 +48,27 @@ export class DailyReportComponent implements OnInit {
 
   constructor(private reportService: ReportDataService) {}
 
-
   ngOnInit(): void {
+    // A lógica de esperar pelo token e carregar os dados permanece a mesma
     this.waitForTokenAndLoadData();
   }
 
   waitForTokenAndLoadData(): void {
-    // Esta função verifica se o token existe.
     if (localStorage.getItem('user_token')) {
-      // Se o token já existe, carrega os dados imediatamente.
       this.loadInitialData();
     } else {
-      // Se o token não existe, espera um pouco e tenta novamente.
-      console.log('A aguardar pelo token de autenticação...');
-      setTimeout(() => {
-        this.waitForTokenAndLoadData(); // Tenta novamente após 100ms
-      }, 100);
+      setTimeout(() => this.waitForTokenAndLoadData(), 100);
     }
   }
 
   loadInitialData(): void {
     this.reportService.loadAllReports().subscribe({
       next: (reports) => {
-        // ATUALIZADO: A ordenação agora é feita pelo 'excelId', do maior para o menor.
         const sortedReports = reports.sort((a, b) => b.excelId - a.excelId);
-
         this.allReports = sortedReports;
         this.dadosExibidos = this.allReports;
         this.calcularKPIs(this.dadosExibidos);
         this.isLoading = false;
-        console.log('Dados carregados e ORDENADOS POR EXCEL ID com sucesso:', this.allReports);
       },
       error: (err) => {
         console.error('Falha ao carregar os relatórios no componente:', err);
@@ -82,6 +76,7 @@ export class DailyReportComponent implements OnInit {
       }
     });
   }
+
   filtrarRelatorios(): void {
     if (!this.startDate || !this.endDate) {
       alert('Por favor, selecione as datas de início e fim.');
