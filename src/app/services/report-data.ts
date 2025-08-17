@@ -1,42 +1,65 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { Observable, of, throwError, BehaviorSubject } from 'rxjs';
+import { catchError, tap, map } from 'rxjs/operators';
 import { SingleReportData } from '../modal/single-report-data/single-report-data';
+import { HistoryDetailsModal } from '../modal/history-details-modal/history-details-modal';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ReportDataService {
   private readonly API_URL = 'https://siemens-web-back-end.onrender.com/reports';
+  private reportsCache$ = new BehaviorSubject<SingleReportData[]>([]);
 
   constructor(private http: HttpClient) { }
 
   /**
-   * ATUALIZADO: Este método agora busca relatórios do backend DENTRO de um intervalo de datas.
-   * Esta é a nossa ÚNICA forma de buscar dados agora.
+   * Método principal: Busca todos os relatórios da API e guarda no cache.
    */
-  getReportsByDateRange(startDate: Date, endDate: Date): Observable<SingleReportData[]> {
+  loadAllReports(): Observable<SingleReportData[]> {
     const token = localStorage.getItem('user_token');
     if (!token) {
       return throwError(() => new Error('Token de autenticação não encontrado.'));
     }
-
-    // Formata as datas para o padrão YYYY-MM-DD, que é universal para APIs
-    const startString = startDate.toISOString().split('T')[0];
-    const endString = endDate.toISOString().split('T')[0];
-
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
-    // ATENÇÃO: O seu backend precisa de ter este endpoint
-    const url = `${this.API_URL}/by-date-range?start=${startString}&end=${endString}`;
 
-    console.log(`Serviço: A buscar relatórios do backend para o intervalo: ${startString} a ${endString}`);
-
-    return this.http.get<SingleReportData[]>(url, { headers }).pipe(
-      tap(reports => console.log(`Serviço: ${reports.length} relatórios recebidos do backend.`)),
+    return this.http.get<SingleReportData[]>(this.API_URL, { headers }).pipe(
+      tap(reports => {
+        this.reportsCache$.next(reports);
+        console.log(`Serviço: ${reports.length} relatórios carregados e guardados no cache.`);
+      }),
       catchError(this.handleError)
     );
   }
+
+  /**
+   * Retorna o relatório mais recente a partir do cache.
+   */
+  getLatestReport(): Observable<SingleReportData | null> {
+    return this.reportsCache$.pipe(
+      map(reports => (!reports || reports.length === 0) ? null : reports[0])
+    );
+  }
+
+  /**
+   * Filtra os relatórios que já estão no cache.
+   */
+  getReportsByDateRange(startDate: Date, endDate: Date): Observable<SingleReportData[]> {
+    return this.reportsCache$.pipe(
+      map(allReports => {
+        if (!allReports) return [];
+        endDate.setHours(23, 59, 59, 999);
+        return allReports.filter(report => {
+          const dt = report.dataHora;
+          if (!dt) return false;
+          const reportDate = new Date(dt[0], dt[1] - 1, dt[2], dt[3], dt[4], dt[5]);
+          return reportDate >= startDate && reportDate <= endDate;
+        });
+      })
+    );
+  }
+  
   
   private handleError(error: HttpErrorResponse) {
     if (error.status === 401) {

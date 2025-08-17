@@ -9,7 +9,6 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule, MAT_DATE_LOCALE } from '@angular/material/core';
-
 import { SingleReportData } from '../../modal/single-report-data/single-report-data'; 
 import { ReportDataService } from '../../services/report-data'; 
 
@@ -29,9 +28,10 @@ import { ReportDataService } from '../../services/report-data';
 })
 export class DailyReportComponent implements OnInit {
   
-  public dadosExibidos: SingleReportData[] = [];
-  public isLoading: boolean = false; // Só fica 'true' durante a busca
-  public searchPerformed: boolean = false; // Para saber se uma busca já foi feita
+  private allReports: SingleReportData[] = []; // Guarda todos os dados em cache
+  public dadosExibidos: SingleReportData[] = []; // Começa vazio
+  public isLoading: boolean = true;
+  public searchPerformed: boolean = false;
 
   public startDate: Date | null = null;
   public endDate: Date | null = null;
@@ -49,8 +49,19 @@ export class DailyReportComponent implements OnInit {
   constructor(private reportService: ReportDataService) {}
 
   ngOnInit(): void {
-    // O componente agora começa vazio, não carrega dados iniciais.
-    this.calcularKPIs([]); // Zera os KPIs no início
+    // Carrega todos os dados em segundo plano
+    this.reportService.loadAllReports().subscribe({
+      next: (reports) => {
+        // Ordena e guarda os dados no cache local, mas NÃO os exibe
+        this.allReports = reports.sort((a, b) => b.excelId - a.excelId);
+        this.isLoading = false; // Termina o carregamento
+        this.calcularKPIs([]); // Mantém os KPIs zerados
+      },
+      error: (err) => {
+        console.error("Erro ao carregar dados iniciais:", err);
+        this.isLoading = false;
+      }
+    });
   }
 
   filtrarRelatorios(): void {
@@ -59,31 +70,20 @@ export class DailyReportComponent implements OnInit {
       return;
     }
     
-    this.isLoading = true;
-    this.searchPerformed = true; // Marca que uma busca foi realizada
+    this.searchPerformed = true;
     
     this.reportService.getReportsByDateRange(this.startDate, this.endDate)
-      .subscribe({
-        next: (dados) => {
-          // Ordena os dados recebidos pelo excelId
-          this.dadosExibidos = dados.sort((a, b) => b.excelId - a.excelId);
-          this.calcularKPIs(this.dadosExibidos);
-          this.isLoading = false;
-        },
-        error: (err) => {
-          console.error("Erro ao filtrar relatórios:", err);
-          this.isLoading = false;
-          this.dadosExibidos = [];
-          this.calcularKPIs([]);
-        }
+      .subscribe(dados => {
+        this.dadosExibidos = dados; // Agora sim, preenche a tabela com os dados filtrados
+        this.calcularKPIs(this.dadosExibidos);
       });
   }
 
   limparFiltro(): void {
     this.startDate = null;
     this.endDate = null;
-    this.dadosExibidos = [];
-    this.searchPerformed = false; // Reseta o estado da busca
+    this.dadosExibidos = []; // Limpa a tabela
+    this.searchPerformed = false;
     this.calcularKPIs([]); // Zera os KPIs
   }
 
