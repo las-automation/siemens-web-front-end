@@ -28,17 +28,23 @@ import { ReportDataService } from '../../services/report-data';
 })
 export class DailyReportComponent implements OnInit {
   
-  private allReports: SingleReportData[] = []; // Guarda todos os dados em cache
-  public dadosExibidos: SingleReportData[] = []; // Começa vazio
+  private allReports: SingleReportData[] = [];
+  public dadosExibidos: SingleReportData[] = [];
   public isLoading: boolean = true;
   public searchPerformed: boolean = false;
 
   public startDate: Date | null = null;
   public endDate: Date | null = null;
   
-  consumoTotalCorrente = 0;
-  eficienciaMedia = 0;
-  alertasNoDia = 0;
+  // NOVAS PROPRIEDADES PARA OS KPIs
+  mediaTem2C = 0;
+  mediaQ90h = 0;
+  mediaConz1Nivel = 0;
+  mediaConz2Nivel = 0;
+  mediaPre1Amp = 0;
+  mediaPre2Amp = 0;
+  mediaPre3Amp = 0;
+  mediaPre4Amp = 0;
 
   displayedColumns: string[] = [
     'reportId', 'dataHora', 'usuario', 'tem2C', 'q90h', 
@@ -49,13 +55,11 @@ export class DailyReportComponent implements OnInit {
   constructor(private reportService: ReportDataService) {}
 
   ngOnInit(): void {
-    // Carrega todos os dados em segundo plano
     this.reportService.loadAllReports().subscribe({
       next: (reports) => {
-        // Ordena e guarda os dados no cache local, mas NÃO os exibe
         this.allReports = reports.sort((a, b) => b.excelId - a.excelId);
-        this.isLoading = false; // Termina o carregamento
-        this.calcularKPIs([]); // Mantém os KPIs zerados
+        this.isLoading = false;
+        this.calcularKPIs([]);
       },
       error: (err) => {
         console.error("Erro ao carregar dados iniciais:", err);
@@ -74,7 +78,7 @@ export class DailyReportComponent implements OnInit {
     
     this.reportService.getReportsByDateRange(this.startDate, this.endDate)
       .subscribe(dados => {
-        this.dadosExibidos = dados; // Agora sim, preenche a tabela com os dados filtrados
+        this.dadosExibidos = dados;
         this.calcularKPIs(this.dadosExibidos);
       });
   }
@@ -82,35 +86,79 @@ export class DailyReportComponent implements OnInit {
   limparFiltro(): void {
     this.startDate = null;
     this.endDate = null;
-    this.dadosExibidos = []; // Limpa a tabela
+    this.dadosExibidos = [];
     this.searchPerformed = false;
-    this.calcularKPIs([]); // Zera os KPIs
+    this.calcularKPIs([]);
   }
 
+  /**
+   * ATUALIZADO: A lógica agora calcula a média de cada métrica individualmente.
+   */
   calcularKPIs(reports: SingleReportData[]): void {
+    const resetKPIs = () => {
+      this.mediaTem2C = 0;
+      this.mediaQ90h = 0;
+      this.mediaConz1Nivel = 0;
+      this.mediaConz2Nivel = 0;
+      this.mediaPre1Amp = 0;
+      this.mediaPre2Amp = 0;
+      this.mediaPre3Amp = 0;
+      this.mediaPre4Amp = 0;
+    };
+
     if (!reports || reports.length === 0) {
-      this.consumoTotalCorrente = 0;
-      this.eficienciaMedia = 0;
-      this.alertasNoDia = 0;
+      resetKPIs();
       return;
     }
-    
-    const reportsComEficiencia = reports.filter(r => typeof r.q90h === 'number');
-    const totalReportsComEficiencia = reportsComEficiencia.length;
 
-    this.consumoTotalCorrente = reports.reduce((acc, report) => acc + this.calcularConsumoReport(report), 0);
-    const totalEficiencia = reportsComEficiencia.reduce((acc, report) => acc + (report.q90h || 0), 0);
-    
-    this.eficienciaMedia = totalReportsComEficiencia > 0 ? totalEficiencia / totalReportsComEficiencia : 0;
-    this.alertasNoDia = reports.filter(report => (report.tem2C || 0) > 90.0).length;
+    const reportsByDay = new Map<string, SingleReportData[]>();
+    reports.forEach(report => {
+      const reportDate = this.formatarData(report.dataHora);
+      if (reportDate) {
+        const dayKey = reportDate.toISOString().split('T')[0];
+        if (!reportsByDay.has(dayKey)) {
+          reportsByDay.set(dayKey, []);
+        }
+        reportsByDay.get(dayKey)?.push(report);
+      }
+    });
+
+    const dailyAverages: { [key: string]: number[] } = {
+      tem2C: [], q90h: [], conz1Nivel: [], conz2Nivel: [],
+      pre1Amp: [], pre2Amp: [], pre3Amp: [], pre4Amp: []
+    };
+
+    const metrics: (keyof SingleReportData)[] = ['tem2C', 'q90h', 'conz1Nivel', 'conz2Nivel', 'pre1Amp', 'pre2Amp', 'pre3Amp', 'pre4Amp'];
+
+    reportsByDay.forEach(dailyReports => {
+      metrics.forEach(metric => {
+        const validReports = dailyReports.filter(r => typeof r[metric] === 'number');
+        if (validReports.length > 0) {
+          const total = validReports.reduce((acc, r) => acc + (r[metric] as number || 0), 0);
+          dailyAverages[metric].push(total / validReports.length);
+        }
+      });
+    });
+
+    const calculateFinalAverage = (dailyValues: number[]) => {
+      if (dailyValues.length === 0) return 0;
+      const total = dailyValues.reduce((acc, val) => acc + val, 0);
+      return total / dailyValues.length;
+    };
+
+    // CORRIGIDO: Acesso às propriedades com bracket notation ['...']
+    this.mediaTem2C = calculateFinalAverage(dailyAverages['tem2C']);
+    this.mediaQ90h = calculateFinalAverage(dailyAverages['q90h']);
+    this.mediaConz1Nivel = calculateFinalAverage(dailyAverages['conz1Nivel']);
+    this.mediaConz2Nivel = calculateFinalAverage(dailyAverages['conz2Nivel']);
+    this.mediaPre1Amp = calculateFinalAverage(dailyAverages['pre1Amp']);
+    this.mediaPre2Amp = calculateFinalAverage(dailyAverages['pre2Amp']);
+    this.mediaPre3Amp = calculateFinalAverage(dailyAverages['pre3Amp']);
+    this.mediaPre4Amp = calculateFinalAverage(dailyAverages['pre4Amp']);
   }
 
   public formatarData(dataArray: number[]): Date | null {
     if (!dataArray || dataArray.length < 6) return null;
     return new Date(dataArray[0], dataArray[1] - 1, dataArray[2], dataArray[3], dataArray[4], dataArray[5]);
-  }
-
-  public calcularConsumoReport(report: SingleReportData): number {
-    return (report.pre1Amp || 0) + (report.pre2Amp || 0) + (report.pre3Amp || 0) + (report.pre4Amp || 0);
   }
 }
