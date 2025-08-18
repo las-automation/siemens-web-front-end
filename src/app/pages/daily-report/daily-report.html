@@ -1,29 +1,73 @@
 <div class="report-container">
   <!-- Secção de KPIs -->
+    <!-- Secção de KPIs ATUALIZADA -->
   <div class="kpi-grid">
+    <!-- KPI Temperatura -->
     <mat-card class="kpi-card">
-      <mat-icon class="kpi-icon">flash_on</mat-icon>
       <div>
-        <p class="kpi-title">Consumo Total</p>
-        <p class="kpi-value">{{ consumoTotalCorrente.toFixed(2) }} A</p>
+        <p class="kpi-title">Média de Temperatura</p>
+        <p class="kpi-value">{{ mediaTem2C.toFixed(1) }} °C</p>
+        <p class="kpi-sub-title">Média diária no período</p>
       </div>
     </mat-card>
+    <!-- KPI Eficiência -->
     <mat-card class="kpi-card">
-      <mat-icon class="kpi-icon">trending_up</mat-icon>
       <div>
-        <p class="kpi-title">Eficiência Média</p>
-        <p class="kpi-value">{{ eficienciaMedia.toFixed(1) }}%</p>
+        <p class="kpi-title">Média de Eficiência</p>
+        <p class="kpi-value">{{ mediaQ90h.toFixed(1) }} %</p>
+        <p class="kpi-sub-title">Média diária no período</p>
       </div>
     </mat-card>
+    <!-- KPI Nível Conz1 -->
     <mat-card class="kpi-card">
-      <mat-icon class="kpi-icon">warning</mat-icon>
       <div>
-        <p class="kpi-title">Total de Alertas</p>
-        <p class="kpi-value">{{ alertasNoDia }}</p>
+        <p class="kpi-title">Média Nível Conz1</p>
+        <p class="kpi-value">{{ mediaConz1Nivel.toFixed(2) }}</p>
+        <p class="kpi-sub-title">Média diária no período</p>
+      </div>
+    </mat-card>
+    <!-- KPI Nível Conz2 -->
+    <mat-card class="kpi-card">
+      <div>
+        <p class="kpi-title">Média Nível Conz2</p>
+        <p class="kpi-value">{{ mediaConz2Nivel.toFixed(2) }}</p>
+        <p class="kpi-sub-title">Média diária no período</p>
+      </div>
+    </mat-card>
+    <!-- KPI Amp Pre1 -->
+    <mat-card class="kpi-card">
+      <div>
+        <p class="kpi-title">Média Amp Pre1</p>
+        <p class="kpi-value">{{ mediaPre1Amp.toFixed(2) }} A</p>
+        <p class="kpi-sub-title">Média diária no período</p>
+      </div>
+    </mat-card>
+    <!-- KPI Amp Pre2 -->
+    <mat-card class="kpi-card">
+      <div>
+        <p class="kpi-title">Média Amp Pre2</p>
+        <p class="kpi-value">{{ mediaPre2Amp.toFixed(2) }} A</p>
+        <p class="kpi-sub-title">Média diária no período</p>
+      </div>
+    </mat-card>
+    <!-- KPI Amp Pre3 -->
+    <mat-card class="kpi-card">
+      <div>
+        <p class="kpi-title">Média Amp Pre3</p>
+        <p class="kpi-value">{{ mediaPre3Amp.toFixed(2) }} A</p>
+        <p class="kpi-sub-title">Média diária no período</p>
+      </div>
+    </mat-card>
+    <!-- KPI Amp Pre4 -->
+    <mat-card class="kpi-card">
+      <div>
+        <p class="kpi-title">Média Amp Pre4</p>
+        <p class="kpi-value">{{ mediaPre4Amp.toFixed(2) }} A</p>
+        <p class="kpi-sub-title">Média diária no período</p>
       </div>
     </mat-card>
   </div>
-
+  
   <!-- SEÇÃO DE FILTRO -->
   <mat-card class="filter-card">
     <div class="filter-content">

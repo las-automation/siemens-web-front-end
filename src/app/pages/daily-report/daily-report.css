@@ -4,44 +4,41 @@
   max-width: 1200px;
   margin: auto;
 }
-
 .kpi-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  /* ATUALIZADO: Tamanho mínimo menor para caber mais cards */
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 20px;
   margin-bottom: 40px;
 }
 
-/* --- ESTILOS MELHORADOS PARA OS CARDS DE KPI --- */
 .kpi-card {
-  display: flex !important;
-  align-items: center;
   padding: 16px;
   background-color: #ffffff;
   border-radius: 8px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.kpi-icon {
-  font-size: 40px;
-  width: 40px;
-  height: 40px;
-  margin-right: 16px;
-  color: #005a9c;
-}
-
 .kpi-title {
   margin: 0;
   color: #666;
   font-size: 1em;
+  font-weight: 500; /* Ligeiramente mais forte */
+}
+
+.kpi-sub-title {
+  margin: 4px 0 0 0;
+  color: #888;
+  font-size: 0.8em;
 }
 
 .kpi-value {
   font-size: 2.2em;
   font-weight: 700;
-  margin: 0;
+  margin: 8px 0 0 0; /* Adicionado espaço acima */
   color: #005a9c;
 }
+
 
 
 /* --- Novos Estilos para o Filtro e Mensagens --- */
