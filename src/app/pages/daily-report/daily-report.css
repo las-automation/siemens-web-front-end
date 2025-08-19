@@ -126,7 +126,6 @@ table {
 /* --- SECÇÃO DE ESTILOS PARA IMPRESSÃO CORRIGIDA --- */
 @media print {
   /* Esconde os elementos que NÃO queremos imprimir */
-  .filter-card,
   .table-container,
   h2, /* Esconde o título "Exibindo X registos" */
   app-header app-logout-button, /* Esconde o botão de sair dentro do header */
