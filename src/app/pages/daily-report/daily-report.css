@@ -123,45 +123,30 @@ table {
 }
 
 /* --- SECÇÃO DE ESTILOS PARA IMPRESSÃO ATUALIZADA --- */
+/* --- SECÇÃO DE ESTILOS PARA IMPRESSÃO CORRIGIDA --- */
 @media print {
-  /* Esconde tudo por defeito */
-  body * {
-    visibility: hidden;
+  /* Esconde os elementos que NÃO queremos imprimir */
+  .filter-card,
+  .table-container,
+  h2, /* Esconde o título "Exibindo X registos" */
+  app-header app-logout-button, /* Esconde o botão de sair dentro do header */
+  app-header nav { /* Esconde a navegação dentro do header */
+    display: none !important;
   }
 
-  /* Torna visível o header, o grid de KPIs e o conteúdo deles */
-  /* Assumimos que o seu header tem a tag <app-header> */
-  app-header, app-header *,
-  .kpi-grid, .kpi-grid * {
-    visibility: visible;
+  /* Garante que o header e os KPIs usem a largura total e não tenham sombras */
+  app-header, .kpi-card {
+    box-shadow: none !important;
+    border: 1px solid #ddd;
   }
   
-  /* Esconde elementos indesejados dentro do header na impressão */
-  app-header app-logout-button, app-header nav {
-      visibility: hidden;
-  }
-
-  /* Posiciona os elementos na página de impressão */
-  app-header {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-  }
-
   .kpi-grid {
-    /* Ajusta a posição para vir depois do header */
-    position: absolute;
-    left: 0;
-    top: 80px; /* Ajuste este valor conforme a altura do seu header */
-    width: 100%;
-    margin: 0;
-    padding: 0;
+      margin-top: 20px; /* Adiciona um espaço abaixo do header */
   }
 
-  /* Remove sombras e fundos desnecessários na impressão */
-  .kpi-card {
-    box-shadow: none;
-    border: 1px solid #ccc;
+  .report-container {
+    padding: 0;
+    margin: 0;
+    max-width: 100%;
   }
 }
