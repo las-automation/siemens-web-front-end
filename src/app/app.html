@@ -1,9 +1,5 @@
-<!-- Ficheiro: src/app/app.component.html -->
+<!-- O cabeçalho só é renderizado se a nossa variável 'showHeader' for 'true' -->
+<app-header *ngIf="showHeader"></app-header>
 
-<!-- O cabeçalho só é renderizado se o nosso "jornal" (isLoggedIn$) disser 'true' -->
-@if (isLoggedIn$ | async) {
-  <app-header></app-header>
-}
-
-<!-- O router-outlet é responsável por carregar a página atual (seja o login ou o dashboard) -->
+<!-- O router-outlet continua a carregar a página atual -->
 <router-outlet></router-outlet>

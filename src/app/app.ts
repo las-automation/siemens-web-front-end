@@ -1,23 +1,35 @@
-// Ficheiro: src/app/app.component.ts
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
-import { HeaderComponent } from './components/header/header';
-import { AuthService } from './services/auth'; // Importa o serviço de autenticação
-import { Observable } from 'rxjs';
+// 1. Importe o Router e os eventos de navegação
+import { Router, RouterOutlet, NavigationEnd } from '@angular/router';
+import { HeaderComponent } from './components/header/header'; 
+import { filter } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
   standalone: true,
   imports: [CommonModule, RouterOutlet, HeaderComponent],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrls: ['./app.css']
 })
 export class AppComponent {
-  isLoggedIn$: Observable<boolean>; // Cria uma variável para guardar o "jornal" de login
+  title = 'siemens-web-front-end';
+  
+  // 2. Crie uma propriedade para controlar a visibilidade do header
+  showHeader: boolean = false;
 
-  constructor(private authService: AuthService) {
-    // Subscreve ao "jornal" do serviço para saber sempre se o utilizador está logado
-    this.isLoggedIn$ = this.authService.isLoggedIn$;
+  constructor(private router: Router) {
+    // 3. "Ouve" as mudanças de rota
+    this.router.events.pipe(
+      // Filtra apenas pelos eventos que acontecem no FIM da navegação
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd)
+    ).subscribe((event: NavigationEnd) => {
+      // 4. Verifica se a URL atual é a de login
+      if (event.urlAfterRedirects === '/login') {
+        this.showHeader = false; // Se for, esconde o header
+      } else {
+        this.showHeader = true; // Se não for, mostra o header
+      }
+    });
   }
 }
