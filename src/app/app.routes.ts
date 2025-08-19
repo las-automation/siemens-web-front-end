@@ -1,18 +1,30 @@
 import { Routes } from '@angular/router';
-import { DailyReportComponent } from './pages/daily-report/daily-report';
+// 1. Importe o seu AuthGuard
+import { authGuard } from './auth-guard';
 import { LoginComponent } from './pages/login/login';
-import { authGuard } from './auth-guard'; // Importa o nosso guarda
+import { DailyReportComponent } from './pages/daily-report/daily-report';
 
 export const routes: Routes = [
-      // A página de login é pública
-  // A página de login é pública
-  { path: 'login', component: LoginComponent },
-
-  // Todas as outras páginas são protegidas pelo authGuard
-  { path: 'relatorios', component: DailyReportComponent, canActivate: [authGuard] },
-
-
-  // Se o utilizador tentar aceder a qualquer outra coisa, é redirecionado para o login
-  { path: '', redirectTo: '/relatorios', pathMatch: 'full' },
-  { path: '**', redirectTo: '/login' }
+  // A rota de login não precisa de proteção
+  { 
+    path: 'login', 
+    component: LoginComponent 
+  },
+  // A rota de relatórios AGORA está protegida pelo AuthGuard
+  { 
+    path: 'relatorios', 
+    component: DailyReportComponent,
+    canActivate: [authGuard] // 2. Adicione esta linha para ativar o "guarda"
+  },
+  // Rota padrão para redirecionar para o login ou para os relatórios
+  { 
+    path: '', 
+    redirectTo: '/login', 
+    pathMatch: 'full' 
+  },
+  // Rota "catch-all" para qualquer outro endereço
+  { 
+    path: '**', 
+    redirectTo: '/login' 
+  }
 ];
