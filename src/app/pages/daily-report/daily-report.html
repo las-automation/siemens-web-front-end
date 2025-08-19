@@ -84,6 +84,10 @@
       <div class="filter-actions">
         <button mat-flat-button color="primary" (click)="filtrarRelatorios()">Filtrar</button>
         <button mat-stroked-button (click)="limparFiltro()">Limpar Filtro</button>
+        <!-- NOVO BOTÃO DE IMPRESSÃO -->
+        <button mat-icon-button class="print-button" color="accent" (click)="imprimirKPIs()" matTooltip="Imprimir KPIs">
+          <mat-icon>print</mat-icon>
+        </button>
       </div>
     </div>
   </mat-card>

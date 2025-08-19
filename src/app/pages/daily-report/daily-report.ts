@@ -161,4 +161,8 @@ export class DailyReportComponent implements OnInit {
     if (!dataArray || dataArray.length < 6) return null;
     return new Date(dataArray[0], dataArray[1] - 1, dataArray[2], dataArray[3], dataArray[4], dataArray[5]);
   }
+
+    imprimirKPIs(): void {
+    window.print();
+  }
 }

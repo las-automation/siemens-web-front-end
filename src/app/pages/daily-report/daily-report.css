@@ -113,3 +113,55 @@ table {
 .mat-mdc-cell, .mat-mdc-header-cell {
   padding: 8px 16px;
 }
+/* ... seus estilos existentes ... */
+
+.kpi-value {
+  font-size: 2.2em;
+  font-weight: 700;
+  margin: 8px 0 0 0;
+  color: #005a9c;
+}
+
+/* --- SECÇÃO DE ESTILOS PARA IMPRESSÃO ATUALIZADA --- */
+@media print {
+  /* Esconde tudo por defeito */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Torna visível o header, o grid de KPIs e o conteúdo deles */
+  /* Assumimos que o seu header tem a tag <app-header> */
+  app-header, app-header *,
+  .kpi-grid, .kpi-grid * {
+    visibility: visible;
+  }
+  
+  /* Esconde elementos indesejados dentro do header na impressão */
+  app-header app-logout-button, app-header nav {
+      visibility: hidden;
+  }
+
+  /* Posiciona os elementos na página de impressão */
+  app-header {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  .kpi-grid {
+    /* Ajusta a posição para vir depois do header */
+    position: absolute;
+    left: 0;
+    top: 80px; /* Ajuste este valor conforme a altura do seu header */
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Remove sombras e fundos desnecessários na impressão */
+  .kpi-card {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+}
