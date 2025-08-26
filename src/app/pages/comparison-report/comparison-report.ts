@@ -71,20 +71,23 @@ export class ComparisonReportComponent {
     forkJoin({
       periodo1: this.reportService.getReportsByDateRange(this.startDate1, this.endDate1),
       periodo2: this.reportService.getReportsByDateRange(this.startDate2, this.endDate2)
-    }).subscribe(({ periodo1, periodo2 }) => {
-      
-      const kpisPeriodo1 = this.calculateKPIsForPeriod(periodo1);
-      const kpisPeriodo2 = this.calculateKPIsForPeriod(periodo2);
+    }).subscribe({
+      next: ({ periodo1, periodo2 }) => {
+        const kpisPeriodo1 = this.calculateKPIsForPeriod(periodo1);
+        const kpisPeriodo2 = this.calculateKPIsForPeriod(periodo2);
 
-      this.results = this.calculateComparison(kpisPeriodo1, kpisPeriodo2);
-      
-      this.isLoading = false;
+        this.results = this.calculateComparison(kpisPeriodo1, kpisPeriodo2);
+        
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error("Erro ao comparar os períodos:", err);
+        alert("Ocorreu um erro ao buscar os dados. Verifique o console para mais detalhes.");
+        this.isLoading = false;
+      }
     });
   }
 
-  /**
-   * ATUALIZADO: A função agora calcula a média para todas as métricas.
-   */
   calculateKPIsForPeriod(reports: SingleReportData[]): CalculatedKPIs {
     const defaultKPIs = {
       mediaTem2C: 0, mediaQ90h: 0, mediaConz1Nivel: 0, mediaConz2Nivel: 0,
