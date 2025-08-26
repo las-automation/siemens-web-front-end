@@ -16,5 +16,6 @@ export class HeaderComponent {
   // CORRIGIDO: A lista agora tem apenas um link e o label foi atualizado.
   navLinks = [
     { path: 'relatorios', label: 'Relatórios' },
+    { path: 'comparacao', label: 'Comparação' },
   ];
 }

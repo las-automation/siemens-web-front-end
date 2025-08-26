@@ -1,0 +1,84 @@
+.report-container {
+  padding: 25px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.filter-card {
+  margin-bottom: 20px;
+}
+
+.period-selectors {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 16px;
+}
+
+.date-range-picker {
+  flex: 1;
+  min-width: 280px;
+}
+
+.filter-actions {
+  padding: 0 16px 16px;
+}
+
+.results-container h3 {
+  border-bottom: 2px solid #005a9c;
+  padding-bottom: 10px;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.kpi-card {
+  padding: 16px;
+}
+
+.kpi-title {
+  margin: 0;
+  font-size: 1.1em;
+  font-weight: 500;
+  color: #333;
+}
+
+.comparison-values {
+  display: flex;
+  justify-content: space-between;
+  margin: 8px 0;
+  font-size: 0.9em;
+  color: #666;
+}
+
+.difference {
+  font-size: 2.5em;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.difference.positive {
+  color: #28a745; /* Verde */
+}
+
+.difference.negative {
+  color: #dc3545; /* Vermelho */
+}
+
+.kpi-sub-title {
+  margin-top: 8px;
+  font-size: 0.8em;
+  color: #888;
+  text-align: center;
+}
+
+.loading-message {
+  text-align: center;
+  padding: 40px;
+}

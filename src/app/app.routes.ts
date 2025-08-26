@@ -1,30 +1,23 @@
 import { Routes } from '@angular/router';
-// 1. Importe o seu AuthGuard
 import { authGuard } from './auth-guard';
 import { LoginComponent } from './pages/login/login';
 import { DailyReportComponent } from './pages/daily-report/daily-report';
+// 1. Importe o novo componente
+import { ComparisonReportComponent } from './pages/comparison-report/comparison-report';
 
 export const routes: Routes = [
-  // A rota de login não precisa de proteção
-  { 
-    path: 'login', 
-    component: LoginComponent 
-  },
-  // A rota de relatórios AGORA está protegida pelo AuthGuard
+  { path: 'login', component: LoginComponent },
   { 
     path: 'relatorios', 
     component: DailyReportComponent,
-    canActivate: [authGuard] // 2. Adicione esta linha para ativar o "guarda"
+    canActivate: [authGuard]
   },
-  // Rota padrão para redirecionar para o login ou para os relatórios
-  { 
-    path: '', 
-    redirectTo: '/login', 
-    pathMatch: 'full' 
+  // 2. Adicione a nova rota de comparação
+  {
+    path: 'comparacao',
+    component: ComparisonReportComponent,
+    canActivate: [authGuard]
   },
-  // Rota "catch-all" para qualquer outro endereço
-  { 
-    path: '**', 
-    redirectTo: '/login' 
-  }
+  { path: '', redirectTo: '/login', pathMatch: 'full' },
+  { path: '**', redirectTo: '/login' }
 ];
