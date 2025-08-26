@@ -9,6 +9,7 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
 import { forkJoin } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 import { SingleReportData } from '../../modal/single-report-data/single-report-data'; 
 import { ReportDataService } from '../../services/report-data'; 
@@ -59,6 +60,9 @@ export class ComparisonReportComponent {
 
   constructor(private reportService: ReportDataService) {}
 
+  /**
+   * ATUALIZADO: A lógica agora busca os dados em etapas para facilitar a depuração.
+   */
   compararPeriodos(): void {
     if (!this.startDate1 || !this.endDate1 || !this.startDate2 || !this.endDate2) {
       alert('Por favor, selecione os dois períodos para comparação.');
@@ -67,25 +71,53 @@ export class ComparisonReportComponent {
 
     this.isLoading = true;
     this.comparisonDone = true;
+    this.results = []; // Limpa resultados antigos
 
-    forkJoin({
-      periodo1: this.reportService.getReportsByDateRange(this.startDate1, this.endDate1),
-      periodo2: this.reportService.getReportsByDateRange(this.startDate2, this.endDate2)
-    }).subscribe({
-      next: ({ periodo1, periodo2 }) => {
-        const kpisPeriodo1 = this.calculateKPIsForPeriod(periodo1);
-        const kpisPeriodo2 = this.calculateKPIsForPeriod(periodo2);
+    console.log("--- INICIANDO COMPARAÇÃO ---");
 
-        this.results = this.calculateComparison(kpisPeriodo1, kpisPeriodo2);
-        
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error("Erro ao comparar os períodos:", err);
-        alert("Ocorreu um erro ao buscar os dados. Verifique o console para mais detalhes.");
-        this.isLoading = false;
-      }
-    });
+    // Passo 1: Buscar dados para o Período 1
+    console.log("Passo 1: Buscando dados para o Período 1...");
+    this.reportService.getReportsByDateRange(this.startDate1, this.endDate1).pipe(take(1))
+      .subscribe({
+        next: (periodo1) => {
+          console.log(`Passo 1 SUCESSO: ${periodo1.length} registos recebidos para o Período 1.`, periodo1);
+
+          // Passo 2: Buscar dados para o Período 2
+          console.log("Passo 2: Buscando dados para o Período 2...");
+          this.reportService.getReportsByDateRange(this.startDate2!, this.endDate2!).pipe(take(1))
+            .subscribe({
+              next: (periodo2) => {
+                console.log(`Passo 2 SUCESSO: ${periodo2.length} registos recebidos para o Período 2.`, periodo2);
+
+                // Passo 3: Calcular KPIs
+                console.log("Passo 3: Calculando KPIs...");
+                const kpisPeriodo1 = this.calculateKPIsForPeriod(periodo1);
+                console.log("KPIs Período 1:", kpisPeriodo1);
+
+                const kpisPeriodo2 = this.calculateKPIsForPeriod(periodo2);
+                console.log("KPIs Período 2:", kpisPeriodo2);
+
+                // Passo 4: Comparar e exibir
+                console.log("Passo 4: Comparando resultados...");
+                this.results = this.calculateComparison(kpisPeriodo1, kpisPeriodo2);
+                console.log("Resultados Finais:", this.results);
+
+                this.isLoading = false;
+                console.log("--- COMPARAÇÃO CONCLUÍDA ---");
+              },
+              error: (err) => {
+                console.error("ERRO no Passo 2 (Buscar Período 2):", err);
+                alert("Ocorreu um erro ao buscar os dados para o segundo período.");
+                this.isLoading = false;
+              }
+            });
+        },
+        error: (err) => {
+          console.error("ERRO no Passo 1 (Buscar Período 1):", err);
+          alert("Ocorreu um erro ao buscar os dados para o primeiro período.");
+          this.isLoading = false;
+        }
+      });
   }
 
   calculateKPIsForPeriod(reports: SingleReportData[]): CalculatedKPIs {
