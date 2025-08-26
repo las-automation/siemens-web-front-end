@@ -82,3 +82,25 @@
   text-align: center;
   padding: 40px;
 }
+
+/* --- ESTILOS PARA IMPRESSÃO --- */
+@media print {
+  /* Esconde elementos indesejados */
+  app-header nav, 
+  app-header app-logout-button,
+  .filter-actions {
+    display: none !important;
+  }
+
+  /* Garante que o layout principal e os cards não tenham sombras */
+  .report-container {
+    padding: 0;
+    margin: 0;
+    max-width: 100%;
+  }
+  
+  .filter-card, .kpi-card {
+    box-shadow: none !important;
+    border: 1px solid #ccc;
+  }
+}
