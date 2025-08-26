@@ -1,0 +1,58 @@
+<div class="report-container">
+  <h2>Comparação de Períodos</h2>
+
+  <mat-card class="filter-card">
+    <div class="period-selectors">
+      <!-- Seletor Período 1 -->
+      <mat-form-field appearance="outline" class="date-range-picker">
+        <mat-label>Período 1 (Base)</mat-label>
+        <mat-date-range-input [rangePicker]="picker1">
+          <input matStartDate placeholder="Data de início" [(ngModel)]="startDate1">
+          <input matEndDate placeholder="Data de fim" [(ngModel)]="endDate1">
+        </mat-date-range-input>
+        <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+        <mat-date-range-picker #picker1></mat-date-range-picker>
+      </mat-form-field>
+
+      <!-- Seletor Período 2 -->
+      <mat-form-field appearance="outline" class="date-range-picker">
+        <mat-label>Período 2 (Comparação)</mat-label>
+        <mat-date-range-input [rangePicker]="picker2">
+          <input matStartDate placeholder="Data de início" [(ngModel)]="startDate2">
+          <input matEndDate placeholder="Data de fim" [(ngModel)]="endDate2">
+        </mat-date-range-input>
+        <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+        <mat-date-range-picker #picker2></mat-date-range-picker>
+      </mat-form-field>
+    </div>
+    <mat-card-actions class="filter-actions">
+      <button mat-flat-button color="primary" (click)="compararPeriodos()">Comparar</button>
+    </mat-card-actions>
+  </mat-card>
+
+  <!-- Resultados da Comparação -->
+  <div *ngIf="isLoading" class="loading-message">
+    A comparar períodos...
+  </div>
+
+  <div *ngIf="!isLoading && comparisonDone" class="results-container">
+    <h3>Resultados da Comparação</h3>
+    <div class="kpi-grid">
+      @for (result of results; track result.metricName) {
+        <mat-card class="kpi-card">
+          <p class="kpi-title">{{ result.metricName }}</p>
+          <div class="comparison-values">
+            <span>P1: {{ result.value1.toFixed(1) }}{{ result.unit }}</span>
+            <span>P2: {{ result.value2.toFixed(1) }}{{ result.unit }}</span>
+          </div>
+          <div class="difference" [ngClass]="{'positive': result.difference > 0, 'negative': result.difference < 0}">
+            <mat-icon *ngIf="result.difference > 0">arrow_upward</mat-icon>
+            <mat-icon *ngIf="result.difference < 0">arrow_downward</mat-icon>
+            <span>{{ result.difference.toFixed(1) }}%</span>
+          </div>
+          <p class="kpi-sub-title">Variação do Período 2 em relação ao Período 1</p>
+        </mat-card>
+      }
+    </div>
+  </div>
+</div>
