@@ -120,6 +120,10 @@ export class ComparisonReportComponent {
       });
   }
 
+  imprimirResultados(): void {
+    window.print();
+  }
+
   calculateKPIsForPeriod(reports: SingleReportData[]): CalculatedKPIs {
     const defaultKPIs = {
       mediaTem2C: 0, mediaQ90h: 0, mediaConz1Nivel: 0, mediaConz2Nivel: 0,
