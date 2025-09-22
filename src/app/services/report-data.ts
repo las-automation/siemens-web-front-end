@@ -9,7 +9,7 @@ import { HistoryDetailsModal } from '../modal/history-details-modal/history-deta
   providedIn: 'root'
 })
 export class ReportDataService {
-  private readonly API_URL = 'https://siemens-web-back-end.onrender.com/reports';
+  private readonly API_URL = 'https://siemens-web-back-end.onrender.com/deojuvante/reports';
   private reportsCache$ = new BehaviorSubject<SingleReportData[]>([]);
 
   constructor(private http: HttpClient) { }
