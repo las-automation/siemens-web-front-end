@@ -1,15 +1,17 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpErrorResponse, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, of, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, tap, map } from 'rxjs/operators';
 import { SingleReportData } from '../modal/single-report-data/single-report-data';
-import { HistoryDetailsModal } from '../modal/history-details-modal/history-details-modal';
+// Removi o HistoryDetailsModal porque não o estamos a usar
+// import { HistoryDetailsModal } from '../modal/history-details-modal/history-details-modal';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ReportDataService {
-  private readonly API_URL = 'https://siemens-web-back-end.onrender.com/deojuvante/reports';
+  // [CORREÇÃO] A API_URL base não deve ter /reports no final
+  private readonly API_BASE_URL = 'https://siemens-web-back-end.onrender.com/deojuvante';
   private reportsCache$ = new BehaviorSubject<SingleReportData[]>([]);
 
   constructor(private http: HttpClient) { }
@@ -24,9 +26,11 @@ export class ReportDataService {
     }
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
 
-    return this.http.get<SingleReportData[]>(this.API_URL, { headers }).pipe(
+    // Usa a URL base + /reports
+    return this.http.get<SingleReportData[]>(`${this.API_BASE_URL}/reports`, { headers }).pipe(
       tap(reports => {
         this.reportsCache$.next(reports);
+        // Este console.log já tens, mas confirma que está a funcionar
         console.log(`Serviço: ${reports.length} relatórios carregados e guardados no cache.`);
       }),
       catchError(this.handleError)
@@ -43,38 +47,44 @@ export class ReportDataService {
   }
 
   /**
-   * [CORREÇÃO DEFINITIVA]
-   * Filtra os relatórios que já estão no cache.
-   * A lógica foi alterada para tratar 'dataHora' como STRING.
+   * [CORREÇÃO] Filtra os relatórios que já estão no cache.
+   * Lógica alterada para tratar 'dataHora' como STRING.
    */
- getReportsByDateRange(startDate: Date, endDate: Date): Observable<SingleReportData[]> {
+  getReportsByDateRange(startDate: Date, endDate: Date): Observable<SingleReportData[]> {
     return this.reportsCache$.pipe(
       map(allReports => {
         if (!allReports) return [];
         
-        endDate.setHours(23, 59, 59, 999);
+        endDate.setHours(23, 59, 59, 999); 
         
         return allReports.filter(report => {
           
-          const dt = report.dataHora; // dt é number[]
-          
-          if (!dt || dt.length < 6) {
-            console.warn(`Serviço: Data array inválida ignorada no filtro: ${dt}`);
-            return false;
-          }
+          // 1. 'dataHora' é uma string
+          const dataString = report.dataHora; 
+          if (!dataString) return false;
 
-          const reportDate = new Date(dt[0], dt[1] - 1, dt[2], dt[3], dt[4], dt[5]);
+          // 2. Converte a string (ex: "2025-02-28T20:38:38") para Data
+          const reportDate = new Date(dataString); 
 
+          // 3. Verifica se é válida
           if (isNaN(reportDate.getTime())) {
-            console.warn(`Serviço: Data array inválida ignorada no filtro (NaN): ${dt}`);
+            console.warn(`Serviço: Data inválida ignorada no filtro: ${dataString}`);
             return false;
           }
           
+          // 4. Compara
           return reportDate >= startDate && reportDate <= endDate;
         });
       })
     );
   }
+
+  /* * [RECOMENDAÇÃO FUTURA]
+   * O teu backend tem um endpoint /reports/by-date.
+   * Seria muito mais rápido chamares esse endpoint em vez de
+   * usares o getReportsByDateRange (que filtra 17k no telemóvel/browser).
+   * Mas, por agora, a solução acima (filtrar no cache) vai funcionar.
+   */
   
   
   private handleError(error: HttpErrorResponse) {

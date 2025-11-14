@@ -28,19 +28,13 @@ import { ReportDataService } from '../../services/report-data';
 })
 export class DailyReportComponent implements OnInit {
   
-  // Lista mestre (17k+ registos)
   private allReports: SingleReportData[] = [];
-  
-  // Lista de exibição (apenas 100 de cada vez)
   public dadosExibidos: SingleReportData[] = []; 
-  
   public isLoading: boolean = true;
   public searchPerformed: boolean = false;
-
   public startDate: Date | null = null;
   public endDate: Date | null = null;
   
-  // Propriedades dos KPIs
   mediaTem2C = 0;
   mediaQ90h = 0;
   mediaConz1Nivel = 0;
@@ -50,9 +44,8 @@ export class DailyReportComponent implements OnInit {
   mediaPre3Amp = 0;
   mediaPre4Amp = 0;
 
-  // Variáveis de Paginação
   public currentPage: number = 1;
-  public itemsPerPage: number = 100; // Define quantos itens mostrar por página
+  public itemsPerPage: number = 100;
   public totalPages: number = 0;
 
   displayedColumns: string[] = [
@@ -68,7 +61,10 @@ export class DailyReportComponent implements OnInit {
       next: (reports) => {
         this.allReports = reports.sort((a, b) => b.excelId - a.excelId);
         
-        console.log(`DIAGNÓSTICO: ${this.allReports.length} relatórios carregados na memória.`);
+        // --- [O TEU PEDIDO: MOSTRAR JSON NO CONSOLE] ---
+        console.log(`DIAGNÓSTICO: ${this.allReports.length} relatórios carregados. Lista JSON:`);
+        console.log(JSON.stringify(this.allReports, null, 2));
+        // --------------------------------------------------
         
         this.totalPages = Math.ceil(this.allReports.length / this.itemsPerPage);
         this.isLoading = false;
@@ -92,11 +88,11 @@ export class DailyReportComponent implements OnInit {
     this.searchPerformed = true;
     this.isLoading = true; 
     
+    // [USA O FILTRO CORRIGIDO]
     this.reportService.getReportsByDateRange(this.startDate, this.endDate)
       .subscribe(dados => {
         this.dadosExibidos = dados; 
         this.calcularKPIs(this.dadosExibidos);
-        
         this.totalPages = 0; 
         this.currentPage = 1;
         this.isLoading = false;
@@ -106,7 +102,6 @@ export class DailyReportComponent implements OnInit {
   limparFiltro(): void {
     this.startDate = null;
     this.endDate = null;
-    
     this.totalPages = Math.ceil(this.allReports.length / this.itemsPerPage);
     this.irParaPagina(1); 
     this.searchPerformed = false;
@@ -133,8 +128,7 @@ export class DailyReportComponent implements OnInit {
     const reportsByDay = new Map<string, SingleReportData[]>();
     reports.forEach(report => {
       
-      // [USA A FUNÇÃO CORRIGIDA]
-      // A função 'formatarData' agora trata o array de números
+      // [CORREÇÃO] Passa a 'dataHora' (que é string) para a função
       const reportDate = this.formatarData(report.dataHora); 
       
       if (reportDate) { // Só processa se a data for válida
@@ -181,28 +175,23 @@ export class DailyReportComponent implements OnInit {
 
   /**
    * [CORREÇÃO] formatarData:
-   * Aceita o ARRAY DE NÚMEROS [ano, mes, dia, hora, min, seg]
-   * Esta função corrige o erro TS2345.
+   * Agora aceita a STRING que vem do backend.
    */
-  public formatarData(dataArray: number[]): Date | null {
-    if (!dataArray || dataArray.length < 6) {
+  public formatarData(dataString: string): Date | null {
+    if (!dataString) {
       return null;
     }
-
-    const date = new Date(
-      dataArray[0], 
-      dataArray[1] - 1, // Mês é 0-indexado
-      dataArray[2], 
-      dataArray[3], 
-      dataArray[4], 
-      dataArray[5]
-    );
+    
+    // O backend envia "2025-02-28T20:38:38"
+    // O 'new Date()' já entende este formato ISO.
+    const date = new Date(dataString);
 
     if (isNaN(date.getTime())) {
-      console.warn("AVISO: Detectada data inválida no relatório (array).", dataArray);
+      // Esta mensagem não deve aparecer mais, mas é uma boa proteção
+      console.warn(`AVISO: Data string inválida detectada: ${dataString}`);
       return null;
     }
-
+    
     return date;
   }
 
@@ -216,11 +205,9 @@ export class DailyReportComponent implements OnInit {
     if (pagina < 1 || pagina > this.totalPages || this.allReports.length === 0) {
       return;
     }
-
     this.currentPage = pagina;
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
-
     this.dadosExibidos = this.allReports.slice(startIndex, endIndex);
   }
 
