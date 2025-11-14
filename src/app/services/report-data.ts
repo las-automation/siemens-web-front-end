@@ -43,17 +43,33 @@ export class ReportDataService {
   }
 
   /**
+   * [CORREÇÃO DEFINITIVA]
    * Filtra os relatórios que já estão no cache.
+   * A lógica foi alterada para tratar 'dataHora' como STRING.
    */
-  getReportsByDateRange(startDate: Date, endDate: Date): Observable<SingleReportData[]> {
+ getReportsByDateRange(startDate: Date, endDate: Date): Observable<SingleReportData[]> {
     return this.reportsCache$.pipe(
       map(allReports => {
         if (!allReports) return [];
+        
         endDate.setHours(23, 59, 59, 999);
+        
         return allReports.filter(report => {
-          const dt = report.dataHora;
-          if (!dt) return false;
+          
+          const dt = report.dataHora; // dt é number[]
+          
+          if (!dt || dt.length < 6) {
+            console.warn(`Serviço: Data array inválida ignorada no filtro: ${dt}`);
+            return false;
+          }
+
           const reportDate = new Date(dt[0], dt[1] - 1, dt[2], dt[3], dt[4], dt[5]);
+
+          if (isNaN(reportDate.getTime())) {
+            console.warn(`Serviço: Data array inválida ignorada no filtro (NaN): ${dt}`);
+            return false;
+          }
+          
           return reportDate >= startDate && reportDate <= endDate;
         });
       })
