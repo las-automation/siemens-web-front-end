@@ -54,18 +54,26 @@ export class DailyReportComponent implements OnInit {
 
   constructor(private reportService: ReportDataService) {}
 
+  // O TEU CÓDIGO CORRIGIDO
   ngOnInit(): void {
-    this.reportService.loadAllReports().subscribe({
-      next: (reports) => {
-        this.allReports = reports.sort((a, b) => b.excelId - a.excelId);
-        this.isLoading = false;
-        this.calcularKPIs([]);
-      },
-      error: (err) => {
-        console.error("Erro ao carregar dados iniciais:", err);
-        this.isLoading = false;
-      }
-    });
+    this.reportService.loadAllReports().subscribe({
+      next: (reports) => {
+        // 1. Guarda na lista mestre
+        this.allReports = reports.sort((a, b) => b.excelId - a.excelId);
+
+        // 2. [A CORREÇÃO] Preenche a lista que o HTML está a ler
+        this.dadosExibidos = this.allReports; // <--- ADICIONA ESTA LINHA
+        
+        this.isLoading = false;
+        
+        // 3. [A CORREÇÃO] Calcula os KPIs sobre a lista completa
+        this.calcularKPIs(this.allReports); // <--- MUDA DE [] PARA this.allReports
+      },
+      error: (err) => {
+        console.error("Erro ao carregar dados iniciais:", err);
+        this.isLoading = false;
+      }
+   });
   }
 
   filtrarRelatorios(): void {
@@ -84,11 +92,13 @@ export class DailyReportComponent implements OnInit {
   }
 
   limparFiltro(): void {
-    this.startDate = null;
-    this.endDate = null;
-    this.dadosExibidos = [];
-    this.searchPerformed = false;
-    this.calcularKPIs([]);
+    this.startDate = null;
+    this.endDate = null;
+    // Restaura a tabela para a lista mestre
+    this.dadosExibidos = this.allReports; 
+    this.searchPerformed = false;
+    // Restaura os KPIs para a lista mestre
+    this.calcularKPIs(this.allReports); 
   }
 
   /**
