@@ -1,8 +1,5 @@
 <div class="report-container">
-  <!-- Secção de KPIs -->
-    <!-- Secção de KPIs ATUALIZADA -->
   <div class="kpi-grid">
-    <!-- KPI Temperatura -->
     <mat-card class="kpi-card">
       <div>
         <p class="kpi-title">Média de Temperatura</p>
@@ -10,7 +7,6 @@
         <p class="kpi-sub-title">Média diária no período</p>
       </div>
     </mat-card>
-    <!-- KPI Eficiência -->
     <mat-card class="kpi-card">
       <div>
         <p class="kpi-title">Média de Eficiência</p>
@@ -18,7 +14,6 @@
         <p class="kpi-sub-title">Média diária no período</p>
       </div>
     </mat-card>
-    <!-- KPI Nível Conz1 -->
     <mat-card class="kpi-card">
       <div>
         <p class="kpi-title">Média Nível Conz1</p>
@@ -26,7 +21,6 @@
         <p class="kpi-sub-title">Média diária no período</p>
       </div>
     </mat-card>
-    <!-- KPI Nível Conz2 -->
     <mat-card class="kpi-card">
       <div>
         <p class="kpi-title">Média Nível Conz2</p>
@@ -34,7 +28,6 @@
         <p class="kpi-sub-title">Média diária no período</p>
       </div>
     </mat-card>
-    <!-- KPI Amp Pre1 -->
     <mat-card class="kpi-card">
       <div>
         <p class="kpi-title">Média Amp Pre1</p>
@@ -42,7 +35,6 @@
         <p class="kpi-sub-title">Média diária no período</p>
       </div>
     </mat-card>
-    <!-- KPI Amp Pre2 -->
     <mat-card class="kpi-card">
       <div>
         <p class="kpi-title">Média Amp Pre2</p>
@@ -50,7 +42,6 @@
         <p class="kpi-sub-title">Média diária no período</p>
       </div>
     </mat-card>
-    <!-- KPI Amp Pre3 -->
     <mat-card class="kpi-card">
       <div>
         <p class="kpi-title">Média Amp Pre3</p>
@@ -58,7 +49,6 @@
         <p class="kpi-sub-title">Média diária no período</p>
       </div>
     </mat-card>
-    <!-- KPI Amp Pre4 -->
     <mat-card class="kpi-card">
       <div>
         <p class="kpi-title">Média Amp Pre4</p>
@@ -68,7 +58,6 @@
     </mat-card>
   </div>
   
-  <!-- SEÇÃO DE FILTRO -->
   <mat-card class="filter-card">
     <div class="filter-content">
       <mat-form-field appearance="outline" class="date-range-picker">
@@ -84,7 +73,6 @@
       <div class="filter-actions">
         <button mat-flat-button color="primary" (click)="filtrarRelatorios()">Filtrar</button>
         <button mat-stroked-button (click)="limparFiltro()">Limpar Filtro</button>
-        <!-- NOVO BOTÃO DE IMPRESSÃO -->
         <button mat-icon-button class="print-button" color="accent" (click)="imprimirKPIs()" matTooltip="Imprimir KPIs">
           <mat-icon>print</mat-icon>
         </button>
@@ -92,17 +80,16 @@
     </div>
   </mat-card>
 
-  <!-- TABELA ÚNICA DE EXIBIÇÃO -->
   <div *ngIf="isLoading" class="loading-message">
     A carregar todos os relatórios...
   </div>
 
   <div *ngIf="!isLoading">
     <h2>Exibindo {{ dadosExibidos.length }} registos</h2>
+    
     <div class="table-container mat-elevation-z8">
       <table mat-table [dataSource]="dadosExibidos">
         
-        <!-- Colunas do Modal com fallback para 0 -->
         <ng-container matColumnDef="reportId">
           <th mat-header-cell *matHeaderCellDef> ID </th>
           <td mat-cell *matCellDef="let row"> {{ row.reportId }} </td>
@@ -165,7 +152,29 @@
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+        <tr *ngIf="dadosExibidos.length === 0">
+          <td class="empty-table-message" [attr.colspan]="displayedColumns.length">
+            Nenhum registo a ser exibido.
+          </td>
+        </tr>
+
       </table>
     </div>
-  </div>
-</div>
+
+    <div class="pagination-controls" *ngIf="totalPages > 0">
+      <button mat-stroked-button (click)="paginaAnterior()" [disabled]="currentPage === 1">
+        <mat-icon>chevron_left</mat-icon>
+        Anterior
+      </button>
+      
+      <span classclass="pagination-text">
+        Página {{ currentPage }} de {{ totalPages }}
+      </span>
+      
+      <button mat-stroked-button (click)="proximaPagina()" [disabled]="currentPage === totalPages">
+        Próxima
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+    </div> </div> 
