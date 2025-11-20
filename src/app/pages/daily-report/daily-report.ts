@@ -29,14 +29,12 @@ import { ReportDataService } from '../../services/report-data';
 export class DailyReportComponent implements OnInit {
   
   private allReports: SingleReportData[] = [];
-  public dadosExibidos: SingleReportData[] = [];
+  public dadosExibidos: SingleReportData[] = []; 
   public isLoading: boolean = true;
   public searchPerformed: boolean = false;
-
   public startDate: Date | null = null;
   public endDate: Date | null = null;
   
-  // NOVAS PROPRIEDADES PARA OS KPIs
   mediaTem2C = 0;
   mediaQ90h = 0;
   mediaConz1Nivel = 0;
@@ -45,6 +43,10 @@ export class DailyReportComponent implements OnInit {
   mediaPre2Amp = 0;
   mediaPre3Amp = 0;
   mediaPre4Amp = 0;
+
+  public currentPage: number = 1;
+  public itemsPerPage: number = 100;
+  public totalPages: number = 0;
 
   displayedColumns: string[] = [
     'reportId', 'dataHora', 'usuario', 'tem2C', 'q90h', 
@@ -58,8 +60,17 @@ export class DailyReportComponent implements OnInit {
     this.reportService.loadAllReports().subscribe({
       next: (reports) => {
         this.allReports = reports.sort((a, b) => b.excelId - a.excelId);
+        
+        // --- [O TEU PEDIDO: MOSTRAR JSON NO CONSOLE] ---
+        console.log(`DIAGNÓSTICO: ${this.allReports.length} relatórios carregados. Lista JSON:`);
+        console.log(JSON.stringify(this.allReports, null, 2));
+        // --------------------------------------------------
+        
+        this.totalPages = Math.ceil(this.allReports.length / this.itemsPerPage);
         this.isLoading = false;
-        this.calcularKPIs([]);
+        
+        this.calcularKPIs(this.allReports); 
+        this.irParaPagina(1);
       },
       error: (err) => {
         console.error("Erro ao carregar dados iniciais:", err);
@@ -75,25 +86,28 @@ export class DailyReportComponent implements OnInit {
     }
     
     this.searchPerformed = true;
+    this.isLoading = true; 
     
+    // [USA O FILTRO CORRIGIDO]
     this.reportService.getReportsByDateRange(this.startDate, this.endDate)
       .subscribe(dados => {
-        this.dadosExibidos = dados;
+        this.dadosExibidos = dados; 
         this.calcularKPIs(this.dadosExibidos);
+        this.totalPages = 0; 
+        this.currentPage = 1;
+        this.isLoading = false;
       });
   }
 
   limparFiltro(): void {
     this.startDate = null;
     this.endDate = null;
-    this.dadosExibidos = [];
+    this.totalPages = Math.ceil(this.allReports.length / this.itemsPerPage);
+    this.irParaPagina(1); 
     this.searchPerformed = false;
-    this.calcularKPIs([]);
+    this.calcularKPIs(this.allReports); 
   }
 
-  /**
-   * ATUALIZADO: A lógica agora calcula a média de cada métrica individualmente.
-   */
   calcularKPIs(reports: SingleReportData[]): void {
     const resetKPIs = () => {
       this.mediaTem2C = 0;
@@ -113,8 +127,11 @@ export class DailyReportComponent implements OnInit {
 
     const reportsByDay = new Map<string, SingleReportData[]>();
     reports.forEach(report => {
-      const reportDate = this.formatarData(report.dataHora);
-      if (reportDate) {
+      
+      // [CORREÇÃO] Passa a 'dataHora' (que é string) para a função
+      const reportDate = this.formatarData(report.dataHora); 
+      
+      if (reportDate) { // Só processa se a data for válida
         const dayKey = reportDate.toISOString().split('T')[0];
         if (!reportsByDay.has(dayKey)) {
           reportsByDay.set(dayKey, []);
@@ -146,7 +163,6 @@ export class DailyReportComponent implements OnInit {
       return total / dailyValues.length;
     };
 
-    // CORRIGIDO: Acesso às propriedades com bracket notation ['...']
     this.mediaTem2C = calculateFinalAverage(dailyAverages['tem2C']);
     this.mediaQ90h = calculateFinalAverage(dailyAverages['q90h']);
     this.mediaConz1Nivel = calculateFinalAverage(dailyAverages['conz1Nivel']);
@@ -157,12 +173,53 @@ export class DailyReportComponent implements OnInit {
     this.mediaPre4Amp = calculateFinalAverage(dailyAverages['pre4Amp']);
   }
 
-  public formatarData(dataArray: number[]): Date | null {
-    if (!dataArray || dataArray.length < 6) return null;
-    return new Date(dataArray[0], dataArray[1] - 1, dataArray[2], dataArray[3], dataArray[4], dataArray[5]);
+  /**
+   * [CORREÇÃO] formatarData:
+   * Agora aceita a STRING que vem do backend.
+   */
+  public formatarData(dataString: string): Date | null {
+    if (!dataString) {
+      return null;
+    }
+    
+    // O backend envia "2025-02-28T20:38:38"
+    // O 'new Date()' já entende este formato ISO.
+    const date = new Date(dataString);
+
+    if (isNaN(date.getTime())) {
+      // Esta mensagem não deve aparecer mais, mas é uma boa proteção
+      console.warn(`AVISO: Data string inválida detectada: ${dataString}`);
+      return null;
+    }
+    
+    return date;
   }
 
-    imprimirKPIs(): void {
+  imprimirKPIs(): void {
     window.print();
+  }
+
+  // --- Funções de Paginação ---
+
+  public irParaPagina(pagina: number): void {
+    if (pagina < 1 || pagina > this.totalPages || this.allReports.length === 0) {
+      return;
+    }
+    this.currentPage = pagina;
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    this.dadosExibidos = this.allReports.slice(startIndex, endIndex);
+  }
+
+  public proximaPagina(): void {
+    if (this.currentPage < this.totalPages) {
+      this.irParaPagina(this.currentPage + 1);
+    }
+  }
+
+  public paginaAnterior(): void {
+    if (this.currentPage > 1) {
+      this.irParaPagina(this.currentPage - 1);
+    }
   }
 }
