@@ -1,4 +1,5 @@
 <div class="report-container">
+  
   <div class="kpi-grid">
     <mat-card class="kpi-card">
       <div>
@@ -60,6 +61,7 @@
   
   <mat-card class="filter-card">
     <div class="filter-content">
+      
       <mat-form-field appearance="outline" class="date-range-picker">
         <mat-label>Filtrar por intervalo de datas</mat-label>
         <mat-date-range-input [rangePicker]="picker">
@@ -70,6 +72,15 @@
         <mat-date-range-picker #picker></mat-date-range-picker>
       </mat-form-field>
 
+      <mat-form-field appearance="outline" class="turno-picker">
+        <mat-label>Turno</mat-label>
+        <mat-select [(ngModel)]="turnoSelecionado">
+          <mat-option value="todos">Análise Diária (Total)</mat-option>
+          <mat-option value="turno1">Turno 1 (07h - 18h)</mat-option>
+          <mat-option value="turno2">Turno 2 (21h - 07h)</mat-option>
+        </mat-select>
+      </mat-form-field>
+
       <div class="filter-actions">
         <button mat-flat-button color="primary" (click)="filtrarRelatorios()">Filtrar</button>
         <button mat-stroked-button (click)="limparFiltro()">Limpar Filtro</button>
@@ -78,6 +89,17 @@
         </button>
       </div>
     </div>
+
+    <div class="turno-feedback" [ngClass]="turnoSelecionado">
+      <mat-icon *ngIf="turnoSelecionado === 'todos'">calendar_today</mat-icon>
+      <mat-icon *ngIf="turnoSelecionado === 'turno1'">wb_sunny</mat-icon>
+      <mat-icon *ngIf="turnoSelecionado === 'turno2'">nights_stay</mat-icon>
+      
+      <span *ngIf="turnoSelecionado === 'todos'">Visualizando: <strong>Análise Total (Todos os turnos)</strong></span>
+      <span *ngIf="turnoSelecionado === 'turno1'">Visualizando: <strong>Turno 1 (Manhã/Tarde)</strong></span>
+      <span *ngIf="turnoSelecionado === 'turno2'">Visualizando: <strong>Turno 2 (Noite/Madrugada)</strong></span>
+    </div>
+
   </mat-card>
 
   <div *ngIf="isLoading" class="loading-message">
@@ -168,7 +190,7 @@
         Anterior
       </button>
       
-      <span classclass="pagination-text">
+      <span class="pagination-text">
         Página {{ currentPage }} de {{ totalPages }}
       </span>
       
@@ -177,4 +199,5 @@
         <mat-icon>chevron_right</mat-icon>
       </button>
     </div>
-    </div> </div> 
+  </div> 
+</div>

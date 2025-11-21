@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule, MAT_DATE_LOCALE } from '@angular/material/core';
+import { MatSelectModule } from '@angular/material/select'; // [NOVO] Importante para o dropdown
 import { SingleReportData } from '../../modal/single-report-data/single-report-data'; 
 import { ReportDataService } from '../../services/report-data'; 
 
@@ -18,7 +19,7 @@ import { ReportDataService } from '../../services/report-data';
   imports: [
     CommonModule, FormsModule, MatCardModule, MatIconModule, 
     MatFormFieldModule, MatInputModule, MatButtonModule, MatTableModule,
-    MatDatepickerModule, MatNativeDateModule
+    MatDatepickerModule, MatNativeDateModule, MatSelectModule // [NOVO]
   ],
   templateUrl: './daily-report.html',
   styleUrl: './daily-report.css',
@@ -30,11 +31,17 @@ export class DailyReportComponent implements OnInit {
   
   private allReports: SingleReportData[] = [];
   public dadosExibidos: SingleReportData[] = []; 
+  
   public isLoading: boolean = true;
   public searchPerformed: boolean = false;
+
   public startDate: Date | null = null;
   public endDate: Date | null = null;
+
+  // [NOVO] Variável para o Turno
+  public turnoSelecionado: string = 'todos';
   
+  // KPIs
   mediaTem2C = 0;
   mediaQ90h = 0;
   mediaConz1Nivel = 0;
@@ -44,6 +51,7 @@ export class DailyReportComponent implements OnInit {
   mediaPre3Amp = 0;
   mediaPre4Amp = 0;
 
+  // Paginação
   public currentPage: number = 1;
   public itemsPerPage: number = 100;
   public totalPages: number = 0;
@@ -61,10 +69,7 @@ export class DailyReportComponent implements OnInit {
       next: (reports) => {
         this.allReports = reports.sort((a, b) => b.excelId - a.excelId);
         
-        // --- [O TEU PEDIDO: MOSTRAR JSON NO CONSOLE] ---
-        console.log(`DIAGNÓSTICO: ${this.allReports.length} relatórios carregados. Lista JSON:`);
-        console.log(JSON.stringify(this.allReports, null, 2));
-        // --------------------------------------------------
+        console.log(`DIAGNÓSTICO: ${this.allReports.length} relatórios carregados.`);
         
         this.totalPages = Math.ceil(this.allReports.length / this.itemsPerPage);
         this.isLoading = false;
@@ -79,6 +84,11 @@ export class DailyReportComponent implements OnInit {
     });
   }
 
+  /**
+   * [ATUALIZADO] filtrarRelatorios:
+   * 1. Busca por DATA no serviço.
+   * 2. Filtra por TURNO localmente.
+   */
   filtrarRelatorios(): void {
     if (!this.startDate || !this.endDate) {
       alert('Por favor, selecione as datas de início e fim.');
@@ -88,20 +98,62 @@ export class DailyReportComponent implements OnInit {
     this.searchPerformed = true;
     this.isLoading = true; 
     
-    // [USA O FILTRO CORRIGIDO]
     this.reportService.getReportsByDateRange(this.startDate, this.endDate)
       .subscribe(dados => {
-        this.dadosExibidos = dados; 
+        
+        // 1. Primeiro temos os dados filtrados por DATA
+        let resultado = dados;
+
+        // 2. Agora aplicamos o filtro de TURNO se não for "todos"
+        if (this.turnoSelecionado !== 'todos') {
+          resultado = resultado.filter(report => 
+            this.pertenceAoTurno(report.dataHora, this.turnoSelecionado)
+          );
+        }
+
+        // 3. Atualizamos a tabela e KPIs com o resultado final
+        this.dadosExibidos = resultado; 
         this.calcularKPIs(this.dadosExibidos);
+        
         this.totalPages = 0; 
         this.currentPage = 1;
         this.isLoading = false;
       });
   }
 
+  /**
+   * [NOVO] Verifica se a data pertence ao turno escolhido
+   */
+  private pertenceAoTurno(dataString: string, turno: string): boolean {
+    if (!dataString) return false;
+    
+    const date = new Date(dataString);
+    if (isNaN(date.getTime())) return false;
+
+    const hora = date.getHours(); // 0 a 23
+
+    if (turno === 'turno1') {
+      // Turno 1: 07:00 até 18:00 (excluindo 18:00 em diante)
+      return hora >= 7 && hora < 18;
+    }
+
+    if (turno === 'turno2') {
+      // Turno 2: 21:00 até 07:00
+      // (Maior ou igual a 21h OU Menor que 7h da manhã)
+      return hora >= 21 || hora < 7;
+    }
+
+    return true;
+  }
+
+  /**
+   * [ATUALIZADO] Limpa filtros e reseta o turno
+   */
   limparFiltro(): void {
     this.startDate = null;
     this.endDate = null;
+    this.turnoSelecionado = 'todos'; // Resetar turno
+    
     this.totalPages = Math.ceil(this.allReports.length / this.itemsPerPage);
     this.irParaPagina(1); 
     this.searchPerformed = false;
@@ -127,11 +179,8 @@ export class DailyReportComponent implements OnInit {
 
     const reportsByDay = new Map<string, SingleReportData[]>();
     reports.forEach(report => {
-      
-      // [CORREÇÃO] Passa a 'dataHora' (que é string) para a função
       const reportDate = this.formatarData(report.dataHora); 
-      
-      if (reportDate) { // Só processa se a data for válida
+      if (reportDate) { 
         const dayKey = reportDate.toISOString().split('T')[0];
         if (!reportsByDay.has(dayKey)) {
           reportsByDay.set(dayKey, []);
@@ -173,25 +222,13 @@ export class DailyReportComponent implements OnInit {
     this.mediaPre4Amp = calculateFinalAverage(dailyAverages['pre4Amp']);
   }
 
-  /**
-   * [CORREÇÃO] formatarData:
-   * Agora aceita a STRING que vem do backend.
-   */
   public formatarData(dataString: string): Date | null {
-    if (!dataString) {
-      return null;
-    }
-    
-    // O backend envia "2025-02-28T20:38:38"
-    // O 'new Date()' já entende este formato ISO.
+    if (!dataString) return null;
     const date = new Date(dataString);
-
     if (isNaN(date.getTime())) {
-      // Esta mensagem não deve aparecer mais, mas é uma boa proteção
-      console.warn(`AVISO: Data string inválida detectada: ${dataString}`);
+      console.warn(`AVISO: Data string inválida: ${dataString}`);
       return null;
     }
-    
     return date;
   }
 
@@ -199,12 +236,9 @@ export class DailyReportComponent implements OnInit {
     window.print();
   }
 
-  // --- Funções de Paginação ---
-
+  // --- Paginação ---
   public irParaPagina(pagina: number): void {
-    if (pagina < 1 || pagina > this.totalPages || this.allReports.length === 0) {
-      return;
-    }
+    if (pagina < 1 || pagina > this.totalPages || this.allReports.length === 0) return;
     this.currentPage = pagina;
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
@@ -212,14 +246,10 @@ export class DailyReportComponent implements OnInit {
   }
 
   public proximaPagina(): void {
-    if (this.currentPage < this.totalPages) {
-      this.irParaPagina(this.currentPage + 1);
-    }
+    if (this.currentPage < this.totalPages) this.irParaPagina(this.currentPage + 1);
   }
 
   public paginaAnterior(): void {
-    if (this.currentPage > 1) {
-      this.irParaPagina(this.currentPage - 1);
-    }
+    if (this.currentPage > 1) this.irParaPagina(this.currentPage - 1);
   }
 }
