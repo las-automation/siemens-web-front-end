@@ -9,6 +9,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule, MAT_DATE_LOCALE } from '@angular/material/core';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox'; // [NOVO] Checkbox
+import { MatTooltipModule } from '@angular/material/tooltip';   // [NOVO] Tooltip
 import { SingleReportData } from '../../modal/single-report-data/single-report-data'; 
 import { ReportDataService } from '../../services/report-data'; 
 
@@ -18,7 +21,8 @@ import { ReportDataService } from '../../services/report-data';
   imports: [
     CommonModule, FormsModule, MatCardModule, MatIconModule, 
     MatFormFieldModule, MatInputModule, MatButtonModule, MatTableModule,
-    MatDatepickerModule, MatNativeDateModule
+    MatDatepickerModule, MatNativeDateModule, MatSelectModule,
+    MatCheckboxModule, MatTooltipModule // [NOVO] Módulos adicionados
   ],
   templateUrl: './daily-report.html',
   styleUrl: './daily-report.css',
@@ -30,11 +34,19 @@ export class DailyReportComponent implements OnInit {
   
   private allReports: SingleReportData[] = [];
   public dadosExibidos: SingleReportData[] = []; 
+  
   public isLoading: boolean = true;
   public searchPerformed: boolean = false;
+
   public startDate: Date | null = null;
   public endDate: Date | null = null;
+
+  public turnoSelecionado: string = 'todos';
   
+  // [NOVO] Variável de controle do Checkbox
+  public ignorarParadas: boolean = false;
+  
+  // KPIs
   mediaTem2C = 0;
   mediaQ90h = 0;
   mediaConz1Nivel = 0;
@@ -44,6 +56,7 @@ export class DailyReportComponent implements OnInit {
   mediaPre3Amp = 0;
   mediaPre4Amp = 0;
 
+  // Paginação
   public currentPage: number = 1;
   public itemsPerPage: number = 100;
   public totalPages: number = 0;
@@ -61,14 +74,12 @@ export class DailyReportComponent implements OnInit {
       next: (reports) => {
         this.allReports = reports.sort((a, b) => b.excelId - a.excelId);
         
-        // --- [O TEU PEDIDO: MOSTRAR JSON NO CONSOLE] ---
-        console.log(`DIAGNÓSTICO: ${this.allReports.length} relatórios carregados. Lista JSON:`);
-        console.log(JSON.stringify(this.allReports, null, 2));
-        // --------------------------------------------------
+        console.log(`DIAGNÓSTICO: ${this.allReports.length} relatórios carregados.`);
         
         this.totalPages = Math.ceil(this.allReports.length / this.itemsPerPage);
         this.isLoading = false;
         
+        // Calcula inicial (considera estado inicial do checkbox)
         this.calcularKPIs(this.allReports); 
         this.irParaPagina(1);
       },
@@ -79,6 +90,13 @@ export class DailyReportComponent implements OnInit {
     });
   }
 
+  /**
+   * Filtrar Relatórios:
+   * 1. Busca por DATA.
+   * 2. Filtra por TURNO.
+   * 3. Atualiza tabela.
+   * 4. Chama calcularKPIs (que aplicará o filtro de paradas se checkbox ativo).
+   */
   filtrarRelatorios(): void {
     if (!this.startDate || !this.endDate) {
       alert('Por favor, selecione as datas de início e fim.');
@@ -88,35 +106,80 @@ export class DailyReportComponent implements OnInit {
     this.searchPerformed = true;
     this.isLoading = true; 
     
-    // [USA O FILTRO CORRIGIDO]
     this.reportService.getReportsByDateRange(this.startDate, this.endDate)
       .subscribe(dados => {
-        this.dadosExibidos = dados; 
+        
+        let resultado = dados;
+
+        // Filtro de Turno
+        if (this.turnoSelecionado !== 'todos') {
+          resultado = resultado.filter(report => 
+            this.pertenceAoTurno(report.dataHora, this.turnoSelecionado)
+          );
+        }
+
+        // Atualiza a tabela com o resultado do filtro de Data/Turno
+        this.dadosExibidos = resultado; 
+        
+        // Recalcula KPIs (Aplicando filtro de "Paradas" se necessário)
         this.calcularKPIs(this.dadosExibidos);
+        
         this.totalPages = 0; 
         this.currentPage = 1;
         this.isLoading = false;
       });
   }
 
+  /**
+   * [NOVO] Chamado quando o utilizador clica no Checkbox.
+   * Recalcula os KPIs imediatamente sem precisar recarregar a API.
+   */
+  public aoAlterarCheckbox(): void {
+    const dadosAtuais = this.searchPerformed ? this.dadosExibidos : this.allReports;
+    this.calcularKPIs(dadosAtuais);
+  }
+
+  private pertenceAoTurno(dataString: string, turno: string): boolean {
+    if (!dataString) return false;
+    const date = new Date(dataString);
+    if (isNaN(date.getTime())) return false;
+
+    const hora = date.getHours(); 
+
+    if (turno === 'turno1') {
+      return hora >= 7 && hora < 18;
+    }
+    if (turno === 'turno2') {
+      return hora >= 21 || hora < 7;
+    }
+    return true;
+  }
+
   limparFiltro(): void {
     this.startDate = null;
     this.endDate = null;
+    this.turnoSelecionado = 'todos';
+    this.ignorarParadas = false; // Reseta o checkbox para o padrão
+
     this.totalPages = Math.ceil(this.allReports.length / this.itemsPerPage);
     this.irParaPagina(1); 
     this.searchPerformed = false;
     this.calcularKPIs(this.allReports); 
   }
 
+  /**
+   * [ATUALIZADO] Calcular KPIs
+   * Regra: Se checkbox ativo, IGNORA registos onde 2 ou mais máquinas têm < 30A.
+   */
   calcularKPIs(reports: SingleReportData[]): void {
     const resetKPIs = () => {
-      this.mediaTem2C = 0;
-      this.mediaQ90h = 0;
-      this.mediaConz1Nivel = 0;
+      this.mediaTem2C = 0; 
+      this.mediaQ90h = 0; 
+      this.mediaConz1Nivel = 0; 
       this.mediaConz2Nivel = 0;
-      this.mediaPre1Amp = 0;
-      this.mediaPre2Amp = 0;
-      this.mediaPre3Amp = 0;
+      this.mediaPre1Amp = 0; 
+      this.mediaPre2Amp = 0; 
+      this.mediaPre3Amp = 0; 
       this.mediaPre4Amp = 0;
     };
 
@@ -125,13 +188,36 @@ export class DailyReportComponent implements OnInit {
       return;
     }
 
+    // --- LÓGICA DE FILTRAGEM DE PARADAS ---
+    let reportsValidos = reports;
+
+    if (this.ignorarParadas) {
+      reportsValidos = reports.filter(r => {
+        let maquinasParadas = 0;
+
+        // Verifica cada máquina individualmente (considera < 30 como parada)
+        if ((r.pre1Amp || 0) < 30) maquinasParadas++;
+        if ((r.pre2Amp || 0) < 30) maquinasParadas++;
+        if ((r.pre3Amp || 0) < 30) maquinasParadas++;
+        if ((r.pre4Amp || 0) < 30) maquinasParadas++;
+
+        // REGRA: Se 2 ou mais máquinas estiverem paradas, IGNORA o registo.
+        // Mantém apenas se tiver 0 ou 1 máquina parada.
+        return maquinasParadas < 2; 
+      });
+    }
+
+    // Se após o filtro não sobrar nada, zera KPIs
+    if (reportsValidos.length === 0) {
+      resetKPIs();
+      return;
+    }
+
+    // --- CÁLCULO DE MÉDIAS (Usando apenas os reportsValidos) ---
     const reportsByDay = new Map<string, SingleReportData[]>();
-    reports.forEach(report => {
-      
-      // [CORREÇÃO] Passa a 'dataHora' (que é string) para a função
+    reportsValidos.forEach(report => {
       const reportDate = this.formatarData(report.dataHora); 
-      
-      if (reportDate) { // Só processa se a data for válida
+      if (reportDate) { 
         const dayKey = reportDate.toISOString().split('T')[0];
         if (!reportsByDay.has(dayKey)) {
           reportsByDay.set(dayKey, []);
@@ -173,25 +259,13 @@ export class DailyReportComponent implements OnInit {
     this.mediaPre4Amp = calculateFinalAverage(dailyAverages['pre4Amp']);
   }
 
-  /**
-   * [CORREÇÃO] formatarData:
-   * Agora aceita a STRING que vem do backend.
-   */
   public formatarData(dataString: string): Date | null {
-    if (!dataString) {
-      return null;
-    }
-    
-    // O backend envia "2025-02-28T20:38:38"
-    // O 'new Date()' já entende este formato ISO.
+    if (!dataString) return null;
     const date = new Date(dataString);
-
     if (isNaN(date.getTime())) {
-      // Esta mensagem não deve aparecer mais, mas é uma boa proteção
-      console.warn(`AVISO: Data string inválida detectada: ${dataString}`);
+      console.warn(`AVISO: Data string inválida: ${dataString}`);
       return null;
     }
-    
     return date;
   }
 
@@ -199,12 +273,9 @@ export class DailyReportComponent implements OnInit {
     window.print();
   }
 
-  // --- Funções de Paginação ---
-
+  // --- Paginação ---
   public irParaPagina(pagina: number): void {
-    if (pagina < 1 || pagina > this.totalPages || this.allReports.length === 0) {
-      return;
-    }
+    if (pagina < 1 || pagina > this.totalPages || this.allReports.length === 0) return;
     this.currentPage = pagina;
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
     const endIndex = startIndex + this.itemsPerPage;
@@ -212,14 +283,10 @@ export class DailyReportComponent implements OnInit {
   }
 
   public proximaPagina(): void {
-    if (this.currentPage < this.totalPages) {
-      this.irParaPagina(this.currentPage + 1);
-    }
+    if (this.currentPage < this.totalPages) this.irParaPagina(this.currentPage + 1);
   }
 
   public paginaAnterior(): void {
-    if (this.currentPage > 1) {
-      this.irParaPagina(this.currentPage - 1);
-    }
+    if (this.currentPage > 1) this.irParaPagina(this.currentPage - 1);
   }
 }
