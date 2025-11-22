@@ -9,7 +9,9 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatTableModule } from '@angular/material/table';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule, MAT_DATE_LOCALE } from '@angular/material/core';
-import { MatSelectModule } from '@angular/material/select'; // [NOVO] Importante para o dropdown
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox'; // [NOVO] Checkbox
+import { MatTooltipModule } from '@angular/material/tooltip';   // [NOVO] Tooltip
 import { SingleReportData } from '../../modal/single-report-data/single-report-data'; 
 import { ReportDataService } from '../../services/report-data'; 
 
@@ -19,7 +21,8 @@ import { ReportDataService } from '../../services/report-data';
   imports: [
     CommonModule, FormsModule, MatCardModule, MatIconModule, 
     MatFormFieldModule, MatInputModule, MatButtonModule, MatTableModule,
-    MatDatepickerModule, MatNativeDateModule, MatSelectModule // [NOVO]
+    MatDatepickerModule, MatNativeDateModule, MatSelectModule,
+    MatCheckboxModule, MatTooltipModule // [NOVO] Módulos adicionados
   ],
   templateUrl: './daily-report.html',
   styleUrl: './daily-report.css',
@@ -38,8 +41,10 @@ export class DailyReportComponent implements OnInit {
   public startDate: Date | null = null;
   public endDate: Date | null = null;
 
-  // [NOVO] Variável para o Turno
   public turnoSelecionado: string = 'todos';
+  
+  // [NOVO] Variável de controle do Checkbox
+  public ignorarParadas: boolean = false;
   
   // KPIs
   mediaTem2C = 0;
@@ -74,6 +79,7 @@ export class DailyReportComponent implements OnInit {
         this.totalPages = Math.ceil(this.allReports.length / this.itemsPerPage);
         this.isLoading = false;
         
+        // Calcula inicial (considera estado inicial do checkbox)
         this.calcularKPIs(this.allReports); 
         this.irParaPagina(1);
       },
@@ -85,9 +91,11 @@ export class DailyReportComponent implements OnInit {
   }
 
   /**
-   * [ATUALIZADO] filtrarRelatorios:
-   * 1. Busca por DATA no serviço.
-   * 2. Filtra por TURNO localmente.
+   * Filtrar Relatórios:
+   * 1. Busca por DATA.
+   * 2. Filtra por TURNO.
+   * 3. Atualiza tabela.
+   * 4. Chama calcularKPIs (que aplicará o filtro de paradas se checkbox ativo).
    */
   filtrarRelatorios(): void {
     if (!this.startDate || !this.endDate) {
@@ -101,18 +109,19 @@ export class DailyReportComponent implements OnInit {
     this.reportService.getReportsByDateRange(this.startDate, this.endDate)
       .subscribe(dados => {
         
-        // 1. Primeiro temos os dados filtrados por DATA
         let resultado = dados;
 
-        // 2. Agora aplicamos o filtro de TURNO se não for "todos"
+        // Filtro de Turno
         if (this.turnoSelecionado !== 'todos') {
           resultado = resultado.filter(report => 
             this.pertenceAoTurno(report.dataHora, this.turnoSelecionado)
           );
         }
 
-        // 3. Atualizamos a tabela e KPIs com o resultado final
+        // Atualiza a tabela com o resultado do filtro de Data/Turno
         this.dadosExibidos = resultado; 
+        
+        // Recalcula KPIs (Aplicando filtro de "Paradas" se necessário)
         this.calcularKPIs(this.dadosExibidos);
         
         this.totalPages = 0; 
@@ -122,53 +131,55 @@ export class DailyReportComponent implements OnInit {
   }
 
   /**
-   * [NOVO] Verifica se a data pertence ao turno escolhido
+   * [NOVO] Chamado quando o utilizador clica no Checkbox.
+   * Recalcula os KPIs imediatamente sem precisar recarregar a API.
    */
+  public aoAlterarCheckbox(): void {
+    const dadosAtuais = this.searchPerformed ? this.dadosExibidos : this.allReports;
+    this.calcularKPIs(dadosAtuais);
+  }
+
   private pertenceAoTurno(dataString: string, turno: string): boolean {
     if (!dataString) return false;
-    
     const date = new Date(dataString);
     if (isNaN(date.getTime())) return false;
 
-    const hora = date.getHours(); // 0 a 23
+    const hora = date.getHours(); 
 
     if (turno === 'turno1') {
-      // Turno 1: 07:00 até 18:00 (excluindo 18:00 em diante)
       return hora >= 7 && hora < 18;
     }
-
     if (turno === 'turno2') {
-      // Turno 2: 21:00 até 07:00
-      // (Maior ou igual a 21h OU Menor que 7h da manhã)
       return hora >= 21 || hora < 7;
     }
-
     return true;
   }
 
-  /**
-   * [ATUALIZADO] Limpa filtros e reseta o turno
-   */
   limparFiltro(): void {
     this.startDate = null;
     this.endDate = null;
-    this.turnoSelecionado = 'todos'; // Resetar turno
-    
+    this.turnoSelecionado = 'todos';
+    this.ignorarParadas = false; // Reseta o checkbox para o padrão
+
     this.totalPages = Math.ceil(this.allReports.length / this.itemsPerPage);
     this.irParaPagina(1); 
     this.searchPerformed = false;
     this.calcularKPIs(this.allReports); 
   }
 
+  /**
+   * [ATUALIZADO] Calcular KPIs
+   * Regra: Se checkbox ativo, IGNORA registos onde 2 ou mais máquinas têm < 30A.
+   */
   calcularKPIs(reports: SingleReportData[]): void {
     const resetKPIs = () => {
-      this.mediaTem2C = 0;
-      this.mediaQ90h = 0;
-      this.mediaConz1Nivel = 0;
+      this.mediaTem2C = 0; 
+      this.mediaQ90h = 0; 
+      this.mediaConz1Nivel = 0; 
       this.mediaConz2Nivel = 0;
-      this.mediaPre1Amp = 0;
-      this.mediaPre2Amp = 0;
-      this.mediaPre3Amp = 0;
+      this.mediaPre1Amp = 0; 
+      this.mediaPre2Amp = 0; 
+      this.mediaPre3Amp = 0; 
       this.mediaPre4Amp = 0;
     };
 
@@ -177,8 +188,34 @@ export class DailyReportComponent implements OnInit {
       return;
     }
 
+    // --- LÓGICA DE FILTRAGEM DE PARADAS ---
+    let reportsValidos = reports;
+
+    if (this.ignorarParadas) {
+      reportsValidos = reports.filter(r => {
+        let maquinasParadas = 0;
+
+        // Verifica cada máquina individualmente (considera < 30 como parada)
+        if ((r.pre1Amp || 0) < 30) maquinasParadas++;
+        if ((r.pre2Amp || 0) < 30) maquinasParadas++;
+        if ((r.pre3Amp || 0) < 30) maquinasParadas++;
+        if ((r.pre4Amp || 0) < 30) maquinasParadas++;
+
+        // REGRA: Se 2 ou mais máquinas estiverem paradas, IGNORA o registo.
+        // Mantém apenas se tiver 0 ou 1 máquina parada.
+        return maquinasParadas < 2; 
+      });
+    }
+
+    // Se após o filtro não sobrar nada, zera KPIs
+    if (reportsValidos.length === 0) {
+      resetKPIs();
+      return;
+    }
+
+    // --- CÁLCULO DE MÉDIAS (Usando apenas os reportsValidos) ---
     const reportsByDay = new Map<string, SingleReportData[]>();
-    reports.forEach(report => {
+    reportsValidos.forEach(report => {
       const reportDate = this.formatarData(report.dataHora); 
       if (reportDate) { 
         const dayKey = reportDate.toISOString().split('T')[0];

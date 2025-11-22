@@ -63,7 +63,7 @@
     <div class="filter-content">
       
       <mat-form-field appearance="outline" class="date-range-picker">
-        <mat-label>Filtrar por intervalo de datas</mat-label>
+        <mat-label>Intervalo de datas</mat-label>
         <mat-date-range-input [rangePicker]="picker">
           <input matStartDate placeholder="Data de início" [(ngModel)]="startDate">
           <input matEndDate placeholder="Data de fim" [(ngModel)]="endDate">
@@ -90,6 +90,19 @@
       </div>
     </div>
 
+    <div class="filter-options" style="padding: 0 20px 15px 20px;">
+      <mat-checkbox 
+        [(ngModel)]="ignorarParadas" 
+        (change)="aoAlterarCheckbox()"
+        color="primary">
+        Ignorar registos com Baixa Produção
+      </mat-checkbox>
+      
+      <span style="font-size: 0.8rem; color: #888; margin-left: 10px;">
+        *Exclui do cálculo se <strong>2 ou mais máquinas</strong> estiverem abaixo de 30A.
+      </span>
+    </div>
+
     <div class="turno-feedback" [ngClass]="turnoSelecionado">
       <mat-icon *ngIf="turnoSelecionado === 'todos'">calendar_today</mat-icon>
       <mat-icon *ngIf="turnoSelecionado === 'turno1'">wb_sunny</mat-icon>
@@ -99,7 +112,6 @@
       <span *ngIf="turnoSelecionado === 'turno1'">Visualizando: <strong>Turno 1 (Manhã/Tarde)</strong></span>
       <span *ngIf="turnoSelecionado === 'turno2'">Visualizando: <strong>Turno 2 (Noite/Madrugada)</strong></span>
     </div>
-
   </mat-card>
 
   <div *ngIf="isLoading" class="loading-message">
@@ -174,7 +186,7 @@
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-
+        
         <tr *ngIf="dadosExibidos.length === 0">
           <td class="empty-table-message" [attr.colspan]="displayedColumns.length">
             Nenhum registo a ser exibido.
