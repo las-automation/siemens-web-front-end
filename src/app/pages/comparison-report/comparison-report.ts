@@ -8,13 +8,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
+import { MatSelectModule } from '@angular/material/select'; // [NOVO]
+import { MatCheckboxModule } from '@angular/material/checkbox'; // [NOVO]
 import { forkJoin } from 'rxjs';
 import { take } from 'rxjs/operators';
 
 import { SingleReportData } from '../../modal/single-report-data/single-report-data'; 
 import { ReportDataService } from '../../services/report-data'; 
 
-// Interface para guardar os KPIs calculados
 interface CalculatedKPIs {
   mediaTem2C: number;
   mediaQ90h: number;
@@ -26,7 +27,6 @@ interface CalculatedKPIs {
   mediaPre4Amp: number;
 }
 
-// Interface para guardar os resultados da comparação
 interface ComparisonResult {
   metricName: string;
   value1: number;
@@ -40,7 +40,8 @@ interface ComparisonResult {
   standalone: true,
   imports: [
     CommonModule, FormsModule, MatCardModule, MatFormFieldModule, MatInputModule,
-    MatButtonModule, MatDatepickerModule, MatNativeDateModule, MatIconModule
+    MatButtonModule, MatDatepickerModule, MatNativeDateModule, MatIconModule,
+    MatSelectModule, MatCheckboxModule // [NOVO] Módulos adicionados
   ],
   templateUrl: './comparison-report.html',
   styleUrl: './comparison-report.css',
@@ -58,11 +59,12 @@ export class ComparisonReportComponent {
   public results: ComparisonResult[] = [];
   public comparisonDone: boolean = false;
 
+  // [NOVO] Filtros Globais
+  public turnoSelecionado: string = 'todos';
+  public ignorarParadas: boolean = false;
+
   constructor(private reportService: ReportDataService) {}
 
-  /**
-   * ATUALIZADO: A lógica agora busca os dados em etapas para facilitar a depuração.
-   */
   compararPeriodos(): void {
     if (!this.startDate1 || !this.endDate1 || !this.startDate2 || !this.endDate2) {
       alert('Por favor, selecione os dois períodos para comparação.');
@@ -71,59 +73,42 @@ export class ComparisonReportComponent {
 
     this.isLoading = true;
     this.comparisonDone = true;
-    this.results = []; // Limpa resultados antigos
+    this.results = [];
 
-    console.log("--- INICIANDO COMPARAÇÃO ---");
-
-    // Passo 1: Buscar dados para o Período 1
-    console.log("Passo 1: Buscando dados para o Período 1...");
+    // Passo 1: Buscar Período 1
     this.reportService.getReportsByDateRange(this.startDate1, this.endDate1).pipe(take(1))
       .subscribe({
         next: (periodo1) => {
-          console.log(`Passo 1 SUCESSO: ${periodo1.length} registos recebidos para o Período 1.`, periodo1);
-
-          // Passo 2: Buscar dados para o Período 2
-          console.log("Passo 2: Buscando dados para o Período 2...");
+          // Passo 2: Buscar Período 2
           this.reportService.getReportsByDateRange(this.startDate2!, this.endDate2!).pipe(take(1))
             .subscribe({
               next: (periodo2) => {
-                console.log(`Passo 2 SUCESSO: ${periodo2.length} registos recebidos para o Período 2.`, periodo2);
-
-                // Passo 3: Calcular KPIs
-                console.log("Passo 3: Calculando KPIs...");
+                
+                // Passo 3: Calcular KPIs (Agora com Filtros!)
                 const kpisPeriodo1 = this.calculateKPIsForPeriod(periodo1);
-                console.log("KPIs Período 1:", kpisPeriodo1);
-
                 const kpisPeriodo2 = this.calculateKPIsForPeriod(periodo2);
-                console.log("KPIs Período 2:", kpisPeriodo2);
 
-                // Passo 4: Comparar e exibir
-                console.log("Passo 4: Comparando resultados...");
+                // Passo 4: Comparar
                 this.results = this.calculateComparison(kpisPeriodo1, kpisPeriodo2);
-                console.log("Resultados Finais:", this.results);
-
+                
                 this.isLoading = false;
-                console.log("--- COMPARAÇÃO CONCLUÍDA ---");
               },
               error: (err) => {
-                console.error("ERRO no Passo 2 (Buscar Período 2):", err);
-                alert("Ocorreu um erro ao buscar os dados para o segundo período.");
+                console.error("ERRO Periodo 2:", err);
                 this.isLoading = false;
               }
             });
         },
         error: (err) => {
-          console.error("ERRO no Passo 1 (Buscar Período 1):", err);
-          alert("Ocorreu um erro ao buscar os dados para o primeiro período.");
+          console.error("ERRO Periodo 1:", err);
           this.isLoading = false;
         }
       });
   }
 
-  imprimirResultados(): void {
-    window.print();
-  }
-
+  /**
+   * [ATUALIZADO] Calcula KPIs aplicando os filtros de Turno e Parada
+   */
   calculateKPIsForPeriod(reports: SingleReportData[]): CalculatedKPIs {
     const defaultKPIs = {
       mediaTem2C: 0, mediaQ90h: 0, mediaConz1Nivel: 0, mediaConz2Nivel: 0,
@@ -134,8 +119,37 @@ export class ComparisonReportComponent {
       return defaultKPIs;
     }
 
+    // --- 1. FILTRAR POR TURNO ---
+    let reportsValidos = reports;
+    if (this.turnoSelecionado !== 'todos') {
+      reportsValidos = reportsValidos.filter(r => 
+        this.pertenceAoTurno(r.dataHora, this.turnoSelecionado)
+      );
+    }
+
+    // --- 2. FILTRAR POR PARADAS (Regra < 30A) ---
+    if (this.ignorarParadas) {
+      reportsValidos = reportsValidos.filter(r => {
+        let maquinasParadas = 0;
+        // Verifica cada máquina
+        if ((r.pre1Amp || 0) < 30) maquinasParadas++;
+        if ((r.pre2Amp || 0) < 30) maquinasParadas++;
+        if ((r.pre3Amp || 0) < 30) maquinasParadas++;
+        if ((r.pre4Amp || 0) < 30) maquinasParadas++;
+
+        // Mantém apenas se tiver 0 ou 1 máquina parada. Se tiver 2+, ignora.
+        return maquinasParadas < 2; 
+      });
+    }
+
+    // Se após filtros não sobrar nada
+    if (reportsValidos.length === 0) {
+      return defaultKPIs;
+    }
+
+    // --- 3. CALCULAR MÉDIAS ---
     const calculateAverage = (metric: keyof SingleReportData): number => {
-      const validReports = reports.filter(r => typeof r[metric] === 'number');
+      const validReports = reportsValidos.filter(r => typeof r[metric] === 'number');
       if (validReports.length === 0) return 0;
       const total = validReports.reduce((acc, r) => acc + (r[metric] as number), 0);
       return total / validReports.length;
@@ -174,5 +188,27 @@ export class ComparisonReportComponent {
       compare('Média Amp Pre3', kpis1.mediaPre3Amp, kpis2.mediaPre3Amp, 'A'),
       compare('Média Amp Pre4', kpis1.mediaPre4Amp, kpis2.mediaPre4Amp, 'A'),
     ];
+  }
+
+  // [NOVO] Funções Auxiliares copiadas do DailyReport
+  private pertenceAoTurno(dataString: string, turno: string): boolean {
+    if (!dataString) return false;
+    const date = new Date(dataString);
+    if (isNaN(date.getTime())) return false;
+    const hora = date.getHours(); 
+
+    if (turno === 'turno1') return hora >= 7 && hora < 18;
+    if (turno === 'turno2') return hora >= 21 || hora < 7;
+    return true;
+  }
+
+  public formatarData(dataString: string): Date | null {
+    if (!dataString) return null;
+    const date = new Date(dataString);
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+  imprimirResultados(): void {
+    window.print();
   }
 }

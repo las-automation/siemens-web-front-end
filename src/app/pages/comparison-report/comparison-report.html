@@ -2,64 +2,95 @@
   <h2>Comparação de Períodos</h2>
 
   <mat-card class="filter-card">
-    <div class="period-selectors">
-      <!-- Seletor Período 1 -->
-      <mat-form-field appearance="outline" class="date-range-picker">
-        <mat-label>Período 1 (Base)</mat-label>
-        <mat-date-range-input [rangePicker]="picker1">
-          <input matStartDate placeholder="Data de início" [(ngModel)]="startDate1">
-          <input matEndDate placeholder="Data de fim" [(ngModel)]="endDate1">
-        </mat-date-range-input>
-        <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
-        <mat-date-range-picker #picker1></mat-date-range-picker>
-      </mat-form-field>
+    <div class="filter-content">
+      
+      <div class="period-selectors">
+        <mat-form-field appearance="outline" class="date-range-picker">
+          <mat-label>Período 1 (Base)</mat-label>
+          <mat-date-range-input [rangePicker]="picker1">
+            <input matStartDate placeholder="Início" [(ngModel)]="startDate1">
+            <input matEndDate placeholder="Fim" [(ngModel)]="endDate1">
+          </mat-date-range-input>
+          <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+          <mat-date-range-picker #picker1></mat-date-range-picker>
+        </mat-form-field>
 
-      <!-- Seletor Período 2 -->
-      <mat-form-field appearance="outline" class="date-range-picker">
-        <mat-label>Período 2 (Comparação)</mat-label>
-        <mat-date-range-input [rangePicker]="picker2">
-          <input matStartDate placeholder="Data de início" [(ngModel)]="startDate2">
-          <input matEndDate placeholder="Data de fim" [(ngModel)]="endDate2">
-        </mat-date-range-input>
-        <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
-        <mat-date-range-picker #picker2></mat-date-range-picker>
-      </mat-form-field>
-    </div>
-    <mat-card-actions class="filter-actions">
-      <button mat-flat-button color="primary" (click)="compararPeriodos()">Comparar</button>
-      <button mat-icon-button color="accent" (click)="imprimirResultados()" matTooltip="Imprimir Comparação">
-        <mat-icon>print</mat-icon>
-      </button>
-    </mat-card-actions>
-  </mat-card>
+        <mat-form-field appearance="outline" class="date-range-picker">
+          <mat-label>Período 2 (Comparação)</mat-label>
+          <mat-date-range-input [rangePicker]="picker2">
+            <input matStartDate placeholder="Início" [(ngModel)]="startDate2">
+            <input matEndDate placeholder="Fim" [(ngModel)]="endDate2">
+          </mat-date-range-input>
+          <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+          <mat-date-range-picker #picker2></mat-date-range-picker>
+        </mat-form-field>
+      </div>
 
-  <!-- Resultados da Comparação -->
-  @if (isLoading) {
-    <div class="loading-message">
-      A comparar períodos...
-    </div>
-  }
+      <div class="data-filters">
+        <mat-form-field appearance="outline" class="turno-picker">
+          <mat-label>Turno (Aplica aos 2 períodos)</mat-label>
+          <mat-select [(ngModel)]="turnoSelecionado">
+            <mat-option value="todos">Todos os Turnos</mat-option>
+            <mat-option value="turno1">Turno 1 (07h - 18h)</mat-option>
+            <mat-option value="turno2">Turno 2 (21h - 07h)</mat-option>
+          </mat-select>
+        </mat-form-field>
 
-  @if (!isLoading && comparisonDone) {
-    <div class="results-container">
-      <h3>Resultados da Comparação</h3>
-      <div class="kpi-grid">
-        @for (result of results; track result.metricName) {
-          <mat-card class="kpi-card">
-            <p class="kpi-title">{{ result.metricName }}</p>
-            <div class="comparison-values">
-              <span>P1: {{ result.value1.toFixed(1) }}{{ result.unit }}</span>
-              <span>P2: {{ result.value2.toFixed(1) }}{{ result.unit }}</span>
-            </div>
-            <div class="difference" [ngClass]="{'positive': result.difference > 0, 'negative': result.difference < 0}">
-              @if (result.difference > 0) { <mat-icon>arrow_upward</mat-icon> }
-              @if (result.difference < 0) { <mat-icon>arrow_downward</mat-icon> }
-              <span>{{ result.difference.toFixed(1) }}%</span>
-            </div>
-            <p class="kpi-sub-title">Variação do Período 2 em relação ao Período 1</p>
-          </mat-card>
-        }
+        <div class="checkbox-container">
+          <mat-checkbox [(ngModel)]="ignorarParadas" color="primary">
+            Ignorar Baixa Produção (< 30A em 2+ máq.)
+          </mat-checkbox>
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <button mat-flat-button color="primary" (click)="compararPeriodos()">Comparar</button>
+        <button mat-icon-button color="accent" (click)="imprimirResultados()" matTooltip="Imprimir Comparação">
+          <mat-icon>print</mat-icon>
+        </button>
       </div>
     </div>
-  }
+
+    <div class="turno-feedback" [ngClass]="turnoSelecionado">
+      <mat-icon *ngIf="turnoSelecionado === 'todos'">calendar_today</mat-icon>
+      <mat-icon *ngIf="turnoSelecionado === 'turno1'">wb_sunny</mat-icon>
+      <mat-icon *ngIf="turnoSelecionado === 'turno2'">nights_stay</mat-icon>
+      <span *ngIf="turnoSelecionado === 'todos'">Comparando: <strong>Todos os turnos</strong></span>
+      <span *ngIf="turnoSelecionado === 'turno1'">Comparando: <strong>Apenas Turno 1</strong></span>
+      <span *ngIf="turnoSelecionado === 'turno2'">Comparando: <strong>Apenas Turno 2</strong></span>
+    </div>
+  </mat-card>
+
+  <div *ngIf="isLoading" class="loading-message">
+    <mat-icon class="spin">autorenew</mat-icon>
+    <p>Processando comparação de dados...</p>
+  </div>
+
+  <div *ngIf="!isLoading && comparisonDone" class="results-container">
+    <h3>Resultados da Comparação</h3>
+    <div class="kpi-grid">
+      <mat-card class="kpi-card" *ngFor="let result of results">
+        <p class="kpi-title">{{ result.metricName }}</p>
+        
+        <div class="comparison-values">
+          <div class="p-value">
+            <span class="label">Período 1</span>
+            <span class="val">{{ result.value1.toFixed(1) }}{{ result.unit }}</span>
+          </div>
+          <div class="p-value">
+            <span class="label">Período 2</span>
+            <span class="val">{{ result.value2.toFixed(1) }}{{ result.unit }}</span>
+          </div>
+        </div>
+
+        <div class="difference" [ngClass]="{'positive': result.difference > 0, 'negative': result.difference < 0}">
+          <mat-icon *ngIf="result.difference > 0">arrow_upward</mat-icon>
+          <mat-icon *ngIf="result.difference < 0">arrow_downward</mat-icon>
+          <mat-icon *ngIf="result.difference === 0">remove</mat-icon>
+          <span>{{ result.difference.toFixed(1) }}%</span>
+        </div>
+        <p class="kpi-sub-title">Variação P2 sobre P1</p>
+      </mat-card>
+    </div>
+  </div>
 </div>
