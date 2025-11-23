@@ -8,9 +8,8 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatIconModule } from '@angular/material/icon';
-import { MatSelectModule } from '@angular/material/select'; // [NOVO]
-import { MatCheckboxModule } from '@angular/material/checkbox'; // [NOVO]
-import { forkJoin } from 'rxjs';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { take } from 'rxjs/operators';
 
 import { SingleReportData } from '../../modal/single-report-data/single-report-data'; 
@@ -41,7 +40,7 @@ interface ComparisonResult {
   imports: [
     CommonModule, FormsModule, MatCardModule, MatFormFieldModule, MatInputModule,
     MatButtonModule, MatDatepickerModule, MatNativeDateModule, MatIconModule,
-    MatSelectModule, MatCheckboxModule // [NOVO] Módulos adicionados
+    MatSelectModule, MatCheckboxModule
   ],
   templateUrl: './comparison-report.html',
   styleUrl: './comparison-report.css',
@@ -53,21 +52,26 @@ export class ComparisonReportComponent {
   
   public startDate1: Date | null = null;
   public endDate1: Date | null = null;
+  
   public startDate2: Date | null = null;
   public endDate2: Date | null = null;
+  
   public isLoading: boolean = false;
   public results: ComparisonResult[] = [];
   public comparisonDone: boolean = false;
 
-  // [NOVO] Filtros Globais
-  public turnoSelecionado: string = 'todos';
+  // [NOVO] Um turno para cada período
+  public turnoPeriodo1: string = 'todos';
+  public turnoPeriodo2: string = 'todos';
+  
+  // O Checkbox de paradas continua a ser uma regra global
   public ignorarParadas: boolean = false;
 
   constructor(private reportService: ReportDataService) {}
 
   compararPeriodos(): void {
     if (!this.startDate1 || !this.endDate1 || !this.startDate2 || !this.endDate2) {
-      alert('Por favor, selecione os dois períodos para comparação.');
+      alert('Por favor, selecione as datas para ambos os períodos.');
       return;
     }
 
@@ -78,76 +82,60 @@ export class ComparisonReportComponent {
     // Passo 1: Buscar Período 1
     this.reportService.getReportsByDateRange(this.startDate1, this.endDate1).pipe(take(1))
       .subscribe({
-        next: (periodo1) => {
+        next: (dadosP1) => {
           // Passo 2: Buscar Período 2
           this.reportService.getReportsByDateRange(this.startDate2!, this.endDate2!).pipe(take(1))
             .subscribe({
-              next: (periodo2) => {
+              next: (dadosP2) => {
                 
-                // Passo 3: Calcular KPIs (Agora com Filtros!)
-                const kpisPeriodo1 = this.calculateKPIsForPeriod(periodo1);
-                const kpisPeriodo2 = this.calculateKPIsForPeriod(periodo2);
+                // [ATUALIZADO] Passamos o turno específico de cada um
+                const kpisPeriodo1 = this.calculateKPIsForPeriod(dadosP1, this.turnoPeriodo1);
+                const kpisPeriodo2 = this.calculateKPIsForPeriod(dadosP2, this.turnoPeriodo2);
 
-                // Passo 4: Comparar
                 this.results = this.calculateComparison(kpisPeriodo1, kpisPeriodo2);
-                
                 this.isLoading = false;
               },
-              error: (err) => {
-                console.error("ERRO Periodo 2:", err);
-                this.isLoading = false;
-              }
+              error: (err) => { console.error(err); this.isLoading = false; }
             });
         },
-        error: (err) => {
-          console.error("ERRO Periodo 1:", err);
-          this.isLoading = false;
-        }
+        error: (err) => { console.error(err); this.isLoading = false; }
       });
   }
 
   /**
-   * [ATUALIZADO] Calcula KPIs aplicando os filtros de Turno e Parada
+   * [ATUALIZADO] Agora recebe o 'turnoEspecifico' como argumento
    */
-  calculateKPIsForPeriod(reports: SingleReportData[]): CalculatedKPIs {
+  calculateKPIsForPeriod(reports: SingleReportData[], turnoEspecifico: string): CalculatedKPIs {
     const defaultKPIs = {
       mediaTem2C: 0, mediaQ90h: 0, mediaConz1Nivel: 0, mediaConz2Nivel: 0,
       mediaPre1Amp: 0, mediaPre2Amp: 0, mediaPre3Amp: 0, mediaPre4Amp: 0
     };
 
-    if (!reports || reports.length === 0) {
-      return defaultKPIs;
-    }
+    if (!reports || reports.length === 0) return defaultKPIs;
 
-    // --- 1. FILTRAR POR TURNO ---
+    // 1. FILTRAR POR TURNO (Usando o argumento turnoEspecifico)
     let reportsValidos = reports;
-    if (this.turnoSelecionado !== 'todos') {
+    if (turnoEspecifico !== 'todos') {
       reportsValidos = reportsValidos.filter(r => 
-        this.pertenceAoTurno(r.dataHora, this.turnoSelecionado)
+        this.pertenceAoTurno(r.dataHora, turnoEspecifico)
       );
     }
 
-    // --- 2. FILTRAR POR PARADAS (Regra < 30A) ---
+    // 2. FILTRAR POR PARADAS (Regra Global)
     if (this.ignorarParadas) {
       reportsValidos = reportsValidos.filter(r => {
         let maquinasParadas = 0;
-        // Verifica cada máquina
         if ((r.pre1Amp || 0) < 30) maquinasParadas++;
         if ((r.pre2Amp || 0) < 30) maquinasParadas++;
         if ((r.pre3Amp || 0) < 30) maquinasParadas++;
         if ((r.pre4Amp || 0) < 30) maquinasParadas++;
-
-        // Mantém apenas se tiver 0 ou 1 máquina parada. Se tiver 2+, ignora.
         return maquinasParadas < 2; 
       });
     }
 
-    // Se após filtros não sobrar nada
-    if (reportsValidos.length === 0) {
-      return defaultKPIs;
-    }
+    if (reportsValidos.length === 0) return defaultKPIs;
 
-    // --- 3. CALCULAR MÉDIAS ---
+    // 3. CALCULAR MÉDIAS
     const calculateAverage = (metric: keyof SingleReportData): number => {
       const validReports = reportsValidos.filter(r => typeof r[metric] === 'number');
       if (validReports.length === 0) return 0;
@@ -190,7 +178,6 @@ export class ComparisonReportComponent {
     ];
   }
 
-  // [NOVO] Funções Auxiliares copiadas do DailyReport
   private pertenceAoTurno(dataString: string, turno: string): boolean {
     if (!dataString) return false;
     const date = new Date(dataString);
@@ -200,12 +187,6 @@ export class ComparisonReportComponent {
     if (turno === 'turno1') return hora >= 7 && hora < 18;
     if (turno === 'turno2') return hora >= 21 || hora < 7;
     return true;
-  }
-
-  public formatarData(dataString: string): Date | null {
-    if (!dataString) return null;
-    const date = new Date(dataString);
-    return isNaN(date.getTime()) ? null : date;
   }
 
   imprimirResultados(): void {

@@ -4,66 +4,96 @@
   <mat-card class="filter-card">
     <div class="filter-content">
       
-      <div class="period-selectors">
-        <mat-form-field appearance="outline" class="date-range-picker">
-          <mat-label>Período 1 (Base)</mat-label>
-          <mat-date-range-input [rangePicker]="picker1">
-            <input matStartDate placeholder="Início" [(ngModel)]="startDate1">
-            <input matEndDate placeholder="Fim" [(ngModel)]="endDate1">
-          </mat-date-range-input>
-          <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
-          <mat-date-range-picker #picker1></mat-date-range-picker>
-        </mat-form-field>
+      <div class="period-group">
+        <div class="group-label">Período 1 (Base)</div>
+        <div class="group-inputs">
+          <mat-form-field appearance="outline" class="date-picker">
+            <mat-label>Datas P1</mat-label>
+            <mat-date-range-input [rangePicker]="picker1">
+              <input matStartDate placeholder="Início" [(ngModel)]="startDate1">
+              <input matEndDate placeholder="Fim" [(ngModel)]="endDate1">
+            </mat-date-range-input>
+            <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+            <mat-date-range-picker #picker1></mat-date-range-picker>
+          </mat-form-field>
 
-        <mat-form-field appearance="outline" class="date-range-picker">
-          <mat-label>Período 2 (Comparação)</mat-label>
-          <mat-date-range-input [rangePicker]="picker2">
-            <input matStartDate placeholder="Início" [(ngModel)]="startDate2">
-            <input matEndDate placeholder="Fim" [(ngModel)]="endDate2">
-          </mat-date-range-input>
-          <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
-          <mat-date-range-picker #picker2></mat-date-range-picker>
-        </mat-form-field>
-      </div>
-
-      <div class="data-filters">
-        <mat-form-field appearance="outline" class="turno-picker">
-          <mat-label>Turno (Aplica aos 2 períodos)</mat-label>
-          <mat-select [(ngModel)]="turnoSelecionado">
-            <mat-option value="todos">Todos os Turnos</mat-option>
-            <mat-option value="turno1">Turno 1 (07h - 18h)</mat-option>
-            <mat-option value="turno2">Turno 2 (21h - 07h)</mat-option>
-          </mat-select>
-        </mat-form-field>
-
-        <div class="checkbox-container">
-          <mat-checkbox [(ngModel)]="ignorarParadas" color="primary">
-            Ignorar Baixa Produção (< 30A em 2+ máq.)
-          </mat-checkbox>
+          <mat-form-field appearance="outline" class="turno-picker">
+            <mat-label>Turno P1</mat-label>
+            <mat-select [(ngModel)]="turnoPeriodo1">
+              <mat-option value="todos">Todos</mat-option>
+              <mat-option value="turno1">Turno 1</mat-option>
+              <mat-option value="turno2">Turno 2</mat-option>
+            </mat-select>
+          </mat-form-field>
         </div>
       </div>
 
+      <div class="vs-icon">VS</div>
+
+      <div class="period-group">
+        <div class="group-label">Período 2 (Comparação)</div>
+        <div class="group-inputs">
+          <mat-form-field appearance="outline" class="date-picker">
+            <mat-label>Datas P2</mat-label>
+            <mat-date-range-input [rangePicker]="picker2">
+              <input matStartDate placeholder="Início" [(ngModel)]="startDate2">
+              <input matEndDate placeholder="Fim" [(ngModel)]="endDate2">
+            </mat-date-range-input>
+            <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+            <mat-date-range-picker #picker2></mat-date-range-picker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="turno-picker">
+            <mat-label>Turno P2</mat-label>
+            <mat-select [(ngModel)]="turnoPeriodo2">
+              <mat-option value="todos">Todos</mat-option>
+              <mat-option value="turno1">Turno 1</mat-option>
+              <mat-option value="turno2">Turno 2</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="filter-footer">
+      <div class="checkbox-container">
+        <mat-checkbox [(ngModel)]="ignorarParadas" color="primary">
+          Ignorar Baixa Produção (< 30A)
+        </mat-checkbox>
+      </div>
+
       <div class="filter-actions">
-        <button mat-flat-button color="primary" (click)="compararPeriodos()">Comparar</button>
-        <button mat-icon-button color="accent" (click)="imprimirResultados()" matTooltip="Imprimir Comparação">
+        <button mat-flat-button color="primary" (click)="compararPeriodos()">Comparar Agora</button>
+        <button mat-icon-button color="accent" (click)="imprimirResultados()" matTooltip="Imprimir">
           <mat-icon>print</mat-icon>
         </button>
       </div>
     </div>
 
-    <div class="turno-feedback" [ngClass]="turnoSelecionado">
-      <mat-icon *ngIf="turnoSelecionado === 'todos'">calendar_today</mat-icon>
-      <mat-icon *ngIf="turnoSelecionado === 'turno1'">wb_sunny</mat-icon>
-      <mat-icon *ngIf="turnoSelecionado === 'turno2'">nights_stay</mat-icon>
-      <span *ngIf="turnoSelecionado === 'todos'">Comparando: <strong>Todos os turnos</strong></span>
-      <span *ngIf="turnoSelecionado === 'turno1'">Comparando: <strong>Apenas Turno 1</strong></span>
-      <span *ngIf="turnoSelecionado === 'turno2'">Comparando: <strong>Apenas Turno 2</strong></span>
+    <div class="feedback-bar">
+      <div class="feedback-item" [ngClass]="turnoPeriodo1">
+        <span class="fb-label">P1:</span>
+        <mat-icon *ngIf="turnoPeriodo1 === 'todos'">calendar_today</mat-icon>
+        <mat-icon *ngIf="turnoPeriodo1 === 'turno1'">wb_sunny</mat-icon>
+        <mat-icon *ngIf="turnoPeriodo1 === 'turno2'">nights_stay</mat-icon>
+        <span>{{ turnoPeriodo1 === 'todos' ? 'Total' : (turnoPeriodo1 === 'turno1' ? 'Dia' : 'Noite') }}</span>
+      </div>
+
+      <div class="feedback-item" [ngClass]="turnoPeriodo2">
+        <span class="fb-label">P2:</span>
+        <mat-icon *ngIf="turnoPeriodo2 === 'todos'">calendar_today</mat-icon>
+        <mat-icon *ngIf="turnoPeriodo2 === 'turno1'">wb_sunny</mat-icon>
+        <mat-icon *ngIf="turnoPeriodo2 === 'turno2'">nights_stay</mat-icon>
+        <span>{{ turnoPeriodo2 === 'todos' ? 'Total' : (turnoPeriodo2 === 'turno1' ? 'Dia' : 'Noite') }}</span>
+      </div>
     </div>
+
   </mat-card>
 
   <div *ngIf="isLoading" class="loading-message">
     <mat-icon class="spin">autorenew</mat-icon>
-    <p>Processando comparação de dados...</p>
+    <p>A calcular comparação...</p>
   </div>
 
   <div *ngIf="!isLoading && comparisonDone" class="results-container">
@@ -74,11 +104,11 @@
         
         <div class="comparison-values">
           <div class="p-value">
-            <span class="label">Período 1</span>
+            <span class="label">P1 ({{ turnoPeriodo1 === 'todos' ? 'T' : (turnoPeriodo1 === 'turno1' ? 'D' : 'N') }})</span>
             <span class="val">{{ result.value1.toFixed(1) }}{{ result.unit }}</span>
           </div>
           <div class="p-value">
-            <span class="label">Período 2</span>
+            <span class="label">P2 ({{ turnoPeriodo2 === 'todos' ? 'T' : (turnoPeriodo2 === 'turno1' ? 'D' : 'N') }})</span>
             <span class="val">{{ result.value2.toFixed(1) }}{{ result.unit }}</span>
           </div>
         </div>
@@ -89,7 +119,7 @@
           <mat-icon *ngIf="result.difference === 0">remove</mat-icon>
           <span>{{ result.difference.toFixed(1) }}%</span>
         </div>
-        <p class="kpi-sub-title">Variação P2 sobre P1</p>
+        <p class="kpi-sub-title">Variação</p>
       </mat-card>
     </div>
   </div>
