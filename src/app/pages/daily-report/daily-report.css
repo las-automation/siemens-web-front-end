@@ -1,325 +1,151 @@
-/* --- CONTENTOR PRINCIPAL --- */
+/* --- Seus Estilos Reaproveitados --- */
 .report-container {
-  padding: 30px;
-  max-width: 1400px; /* Aumentado ligeiramente para telas largas */
-  margin: 0 auto;
-  background-color: #f8f9fa; /* Fundo cinza muito suave para a página */
-  min-height: 100vh;
+  padding: 25px;
+  max-width: 1200px;
+  margin: auto;
 }
-
-/* --- GRID DE KPIs (Cards) --- */
 .kpi-grid {
   display: grid;
-  /* Responsivo: adapta o número de colunas automaticamente */
-  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 24px;
+  /* ATUALIZADO: Tamanho mínimo menor para caber mais cards */
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
   margin-bottom: 40px;
 }
 
 .kpi-card {
-  padding: 20px;
+  padding: 16px;
   background-color: #ffffff;
-  border-radius: 12px; /* Bordas mais arredondadas (Moderno) */
-  border: 1px solid rgba(0, 0, 0, 0.05); /* Borda subtil */
-  /* Sombra suave (Elevation) */
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-/* Efeito ao passar o mouse no Card */
-.kpi-card:hover {
-  transform: translateY(-4px); /* Levanta ligeiramente */
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .kpi-title {
   margin: 0;
-  color: #5f6368; /* Cinza profissional */
-  font-size: 0.95rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.kpi-value {
-  font-size: 2.5rem; /* Maior destaque */
-  font-weight: 700;
-  margin: 12px 0 4px 0;
-  color: #005a9c; /* Azul Siemens */
-  line-height: 1.1;
+  color: #666;
+  font-size: 1em;
+  font-weight: 500; /* Ligeiramente mais forte */
 }
 
 .kpi-sub-title {
-  margin: 0;
-  color: #9aa0a6;
-  font-size: 0.8rem;
+  margin: 4px 0 0 0;
+  color: #888;
+  font-size: 0.8em;
 }
 
-/* --- FILTROS E AÇÕES --- */
+.kpi-value {
+  font-size: 2.2em;
+  font-weight: 700;
+  margin: 8px 0 0 0; /* Adicionado espaço acima */
+  color: #005a9c;
+}
+
+
+
+/* --- Novos Estilos para o Filtro e Mensagens --- */
 .filter-card {
-  margin-bottom: 30px;
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  overflow: hidden; /* Para a borda colorida não vazar */
+  margin-top: 20px;
+  margin-bottom: 20px;
+  background-color: #f9f9f9;
 }
 
 .filter-content {
-  padding: 20px;
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 20px;
+  flex-wrap: wrap; 
+  gap: 16px;
+  padding: 8px 16px;
 }
 
-/* Inputs do filtro */
+/* ATUALIZADO: O seletor de data agora tem um tamanho máximo */
 .date-range-picker {
   flex-grow: 1;
-  max-width: 400px;
-  min-width: 200px;
-}
-
-.turno-picker {
-  flex-grow: 1;
-  max-width: 250px;
-  min-width: 150px;
+  max-width: 400px; /* Define um limite para o tamanho do input */
+  min-width: 280px;
 }
 
 .filter-actions {
   display: flex;
-  gap: 12px;
-  align-items: center;
-  margin-left: auto; /* Empurra os botões para a direita se houver espaço */
+  gap: 8px;
 }
 
-/* Checkbox de Filtro Extra */
-.filter-options {
-  padding: 0 20px 15px 20px;
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
+.loading-message {
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+  color: #666;
 }
 
-/* --- BARRA DE FEEDBACK DE TURNO (Cores) --- */
-.turno-feedback {
-  padding: 12px 24px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 0.95rem;
-  font-weight: 500;
-  border-top: 1px solid rgba(0,0,0,0.05);
-  transition: background-color 0.3s ease;
-}
-
-.turno-feedback mat-icon {
-  color: inherit;
-  font-size: 24px;
-  width: 24px;
-  height: 24px;
-}
-
-/* Cores Específicas do Turno */
-.turno-feedback.todos {
-  background-color: #fafafa;
-  color: #616161;
-  border-left: 6px solid #9e9e9e;
-}
-
-.turno-feedback.turno1 {
-  background-color: #fffdeb; /* Amarelo muito suave */
-  color: #bf360c; /* Laranja queimado */
-  border-left: 6px solid #ffca28; /* Amarelo ouro */
-}
-
-.turno-feedback.turno2 {
-  background-color: #f3e5f5; /* Roxo muito suave */
-  color: #4a148c; /* Roxo escuro */
-  border-left: 6px solid #7b1fa2; /* Roxo */
-}
-
-/* --- TABELA DE DADOS (Clean Design) --- */
 h2 {
-  font-size: 1.25rem;
-  color: #202124;
-  margin-bottom: 15px;
-  font-weight: 500;
-  border-left: 4px solid #005a9c;
-  padding-left: 12px;
+  margin-top: 40px;
+  border-bottom: 2px solid #005a9c;
+  padding-bottom: 10px;
 }
 
+/* --- ESTILOS MELHORADOS PARA A TABELA --- */
 .table-container {
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  overflow-x: auto; /* Scroll horizontal se necessário */
-  max-height: 600px; /* Scroll vertical se a tabela for muito longa */
-  overflow-y: auto;
+  overflow-x: auto;
   margin-top: 20px;
 }
 
 table {
   width: 100%;
-  border-collapse: collapse;
 }
 
-/* Cabeçalho da Tabela */
 .mat-mdc-header-cell {
-  background-color: #f1f3f4;
-  color: #202124;
-  font-weight: 700;
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 16px !important;
-  /* Sticky Header: O cabeçalho fica fixo ao rolar */
-  position: sticky; 
-  top: 0;
-  z-index: 10;
-  border-bottom: 2px solid #e0e0e0;
+  background-color: #f0f0f0;
+  font-weight: bold;
 }
 
-/* Células */
-.mat-mdc-cell {
-  padding: 12px 16px !important;
-  font-size: 0.9rem;
-  color: #3c4043;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-/* Linhas */
 .mat-mdc-row:nth-child(even) {
   background-color: #fafafa;
 }
 
 .mat-mdc-row:hover {
-  background-color: #f8f9fa !important; /* Hover muito suave */
+  background-color: #e9e9e9;
 }
 
-/* Números alinhados à direita */
+/* Alinha o conteúdo das células numéricas à direita */
 .numeric-cell {
   text-align: right;
-  font-family: 'Roboto Mono', monospace; /* Fonte monoespaçada para números alinharem */
-  font-weight: 500;
 }
 
-/* Mensagem de Tabela Vazia */
-.empty-table-message {
-  text-align: center;
-  padding: 40px;
-  color: #9aa0a6;
-  font-style: italic;
-  background-color: #fff;
+/* Adiciona um espaçamento interno às células */
+.mat-mdc-cell, .mat-mdc-header-cell {
+  padding: 8px 16px;
 }
+/* ... seus estilos existentes ... */
 
-/* Loading */
-.loading-message {
-  text-align: center;
-  padding: 40px;
-  font-size: 1.1rem;
+.kpi-value {
+  font-size: 2.2em;
+  font-weight: 700;
+  margin: 8px 0 0 0;
   color: #005a9c;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 10px;
-  font-style: italic;
 }
 
-/* --- PAGINAÇÃO --- */
-.pagination-controls {
-  display: flex;
-  justify-content: center; /* Centraliza */
-  align-items: center;
-  padding: 20px;
-  background-color: #fff;
-  margin-top: 2px; /* Cola na tabela */
-  border-radius: 0 0 8px 8px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-}
-
-.pagination-text {
-  margin: 0 20px;
-  font-weight: 500;
-  color: #5f6368;
-}
-
-/* --- IMPRESSÃO (Otimizado para Papel) --- */
+/* --- SECÇÃO DE ESTILOS PARA IMPRESSÃO ATUALIZADA --- */
+/* --- SECÇÃO DE ESTILOS PARA IMPRESSÃO CORRIGIDA --- */
 @media print {
-  @page {
-    size: landscape; /* Força orientação paisagem */
-    margin: 10mm;
-  }
-
-  /* Esconde elementos de navegação e filtros */
-  .filter-card, 
-  .pagination-controls,
-  app-header,
-  app-sidebar,
-  button,
-  .loading-message {
+  /* Esconde os elementos que NÃO queremos imprimir */
+  .table-container,
+  h2, /* Esconde o título "Exibindo X registos" */
+  app-header app-logout-button, /* Esconde o botão de sair dentro do header */
+  app-header nav { /* Esconde a navegação dentro do header */
     display: none !important;
   }
 
-  /* Remove sombras e fundos para economizar tinta */
-  .report-container, .kpi-card, .table-container {
+  /* Garante que o header e os KPIs usem a largura total e não tenham sombras */
+  app-header, .kpi-card {
     box-shadow: none !important;
-    border: none !important;
-    background-color: transparent !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    max-width: 100% !important;
+    border: 1px solid #ddd;
+  }
+  
+  .kpi-grid {
+      margin-top: 20px; /* Adiciona um espaço abaixo do header */
   }
 
   .report-container {
     padding: 0;
     margin: 0;
-  }
-
-  /* Grid de KPIs para impressão */
-  .kpi-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr); /* Força 4 colunas no papel */
-    gap: 10px;
-    margin-bottom: 20px;
-    margin-top: 20px;
-  }
-
-  .kpi-card {
-    border: 1px solid #ccc !important;
-    padding: 10px !important;
-    page-break-inside: avoid; /* Não quebra o card ao meio */
-  }
-  
-  .kpi-value {
-    font-size: 1.5rem !important; /* Diminui um pouco para caber */
-    color: #000 !important; /* Preto puro para impressão */
-  }
-
-  /* Tabela para impressão */
-  .table-container {
-    overflow: visible !important; /* Mostra tudo */
-    margin-top: 0;
-  }
-
-  table {
-    font-size: 10px; /* Fonte menor para caber muitas colunas */
-  }
-
-  .mat-mdc-header-cell {
-    background-color: #ddd !important;
-    color: #000 !important;
-    border: 1px solid #999;
-  }
-
-  .mat-mdc-cell {
-    border: 1px solid #ccc;
-    color: #000;
-  }
-  
-  h2 {
-    display: none; /* Oculta título "Exibindo X registos" */
+    max-width: 100%;
   }
 }
