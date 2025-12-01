@@ -1,6 +1,18 @@
 <div class="report-container">
   
   <div class="kpi-grid">
+    
+    <mat-card class="kpi-card" style="border-left: 4px solid #ff9800;">
+      <div>
+        <p class="kpi-title" style="color: #e65100;">Extração de Óleo</p>
+        <div style="display: flex; align-items: baseline; gap: 8px;">
+          <mat-icon style="color:#ff9800; font-size: 2rem; width: 2rem; height: 2rem;">water_drop</mat-icon>
+          <p class="kpi-value" style="color: #e65100;">{{ totalTanquesCheios }}</p>
+        </div>
+        <p class="kpi-sub-title">Tanques cheios neste período/turno</p>
+      </div>
+    </mat-card>
+
     <mat-card class="kpi-card">
       <div>
         <p class="kpi-title">Média de Temperatura</p>
@@ -84,6 +96,11 @@
       <div class="filter-actions">
         <button mat-flat-button color="primary" (click)="filtrarRelatorios()">Filtrar</button>
         <button mat-stroked-button (click)="limparFiltro()">Limpar Filtro</button>
+        
+        <button mat-raised-button style="background-color: #212121; color: white;" (click)="abrirRegistroOleo()">
+          <mat-icon>water_drop</mat-icon> Óleo
+        </button>
+
         <button mat-icon-button class="print-button" color="accent" (click)="imprimirKPIs()" matTooltip="Imprimir KPIs">
           <mat-icon>print</mat-icon>
         </button>
