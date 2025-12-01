@@ -10,8 +10,8 @@ import { MatTableModule } from '@angular/material/table';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox'; // [NOVO] Checkbox
-import { MatTooltipModule } from '@angular/material/tooltip';   // [NOVO] Tooltip
+import { MatCheckboxModule } from '@angular/material/checkbox'; // Importante para o checkbox
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { SingleReportData } from '../../modal/single-report-data/single-report-data'; 
 import { ReportDataService } from '../../services/report-data'; 
 
@@ -22,7 +22,7 @@ import { ReportDataService } from '../../services/report-data';
     CommonModule, FormsModule, MatCardModule, MatIconModule, 
     MatFormFieldModule, MatInputModule, MatButtonModule, MatTableModule,
     MatDatepickerModule, MatNativeDateModule, MatSelectModule,
-    MatCheckboxModule, MatTooltipModule // [NOVO] Módulos adicionados
+    MatCheckboxModule, MatTooltipModule
   ],
   templateUrl: './daily-report.html',
   styleUrl: './daily-report.css',
@@ -41,10 +41,9 @@ export class DailyReportComponent implements OnInit {
   public startDate: Date | null = null;
   public endDate: Date | null = null;
 
+  // Filtros
   public turnoSelecionado: string = 'todos';
-  
-  // [NOVO] Variável de controle do Checkbox
-  public ignorarParadas: boolean = false;
+  public ignorarParadas: boolean = false; // Controla o checkbox
   
   // KPIs
   mediaTem2C = 0;
@@ -91,11 +90,8 @@ export class DailyReportComponent implements OnInit {
   }
 
   /**
-   * Filtrar Relatórios:
-   * 1. Busca por DATA.
-   * 2. Filtra por TURNO.
-   * 3. Atualiza tabela.
-   * 4. Chama calcularKPIs (que aplicará o filtro de paradas se checkbox ativo).
+   * Chamado pelo botão "Filtrar".
+   * Aplica filtro de DATA e TURNO, e depois calcula KPIs.
    */
   filtrarRelatorios(): void {
     if (!this.startDate || !this.endDate) {
@@ -121,7 +117,7 @@ export class DailyReportComponent implements OnInit {
         // Atualiza a tabela com o resultado do filtro de Data/Turno
         this.dadosExibidos = resultado; 
         
-        // Recalcula KPIs (Aplicando filtro de "Paradas" se necessário)
+        // Recalcula KPIs (Aplicando filtro de "Paradas" se o checkbox estiver marcado)
         this.calcularKPIs(this.dadosExibidos);
         
         this.totalPages = 0; 
@@ -131,8 +127,8 @@ export class DailyReportComponent implements OnInit {
   }
 
   /**
-   * [NOVO] Chamado quando o utilizador clica no Checkbox.
-   * Recalcula os KPIs imediatamente sem precisar recarregar a API.
+   * Chamado quando o utilizador clica no Checkbox.
+   * Recalcula imediatamente usando os dados que já estão na memória.
    */
   public aoAlterarCheckbox(): void {
     const dadosAtuais = this.searchPerformed ? this.dadosExibidos : this.allReports;
@@ -159,7 +155,7 @@ export class DailyReportComponent implements OnInit {
     this.startDate = null;
     this.endDate = null;
     this.turnoSelecionado = 'todos';
-    this.ignorarParadas = false; // Reseta o checkbox para o padrão
+    this.ignorarParadas = false; // Reseta o checkbox
 
     this.totalPages = Math.ceil(this.allReports.length / this.itemsPerPage);
     this.irParaPagina(1); 
@@ -168,19 +164,13 @@ export class DailyReportComponent implements OnInit {
   }
 
   /**
-   * [ATUALIZADO] Calcular KPIs
-   * Regra: Se checkbox ativo, IGNORA registos onde 2 ou mais máquinas têm < 30A.
+   * Lógica Principal de Cálculo dos KPIs.
+   * Contém a regra: Se checkbox ativo, IGNORA registos onde 2+ máquinas têm < 30A.
    */
   calcularKPIs(reports: SingleReportData[]): void {
     const resetKPIs = () => {
-      this.mediaTem2C = 0; 
-      this.mediaQ90h = 0; 
-      this.mediaConz1Nivel = 0; 
-      this.mediaConz2Nivel = 0;
-      this.mediaPre1Amp = 0; 
-      this.mediaPre2Amp = 0; 
-      this.mediaPre3Amp = 0; 
-      this.mediaPre4Amp = 0;
+      this.mediaTem2C = 0; mediaQ90h = 0; mediaConz1Nivel = 0; mediaConz2Nivel = 0;
+      mediaPre1Amp = 0; mediaPre2Amp = 0; mediaPre3Amp = 0; mediaPre4Amp = 0;
     };
 
     if (!reports || reports.length === 0) {
@@ -188,20 +178,21 @@ export class DailyReportComponent implements OnInit {
       return;
     }
 
-    // --- LÓGICA DE FILTRAGEM DE PARADAS ---
+    // --- FILTRO DE PARADAS ---
     let reportsValidos = reports;
 
     if (this.ignorarParadas) {
       reportsValidos = reports.filter(r => {
         let maquinasParadas = 0;
 
-        // Verifica cada máquina individualmente (considera < 30 como parada)
+        // Verifica cada máquina individualmente
+        // Considera "Parada" se for < 30 ou nulo
         if ((r.pre1Amp || 0) < 30) maquinasParadas++;
         if ((r.pre2Amp || 0) < 30) maquinasParadas++;
         if ((r.pre3Amp || 0) < 30) maquinasParadas++;
         if ((r.pre4Amp || 0) < 30) maquinasParadas++;
 
-        // REGRA: Se 2 ou mais máquinas estiverem paradas, IGNORA o registo.
+        // REGRA: Se 2 ou mais máquinas estiverem paradas, IGNORA este relatório.
         // Mantém apenas se tiver 0 ou 1 máquina parada.
         return maquinasParadas < 2; 
       });
@@ -213,7 +204,7 @@ export class DailyReportComponent implements OnInit {
       return;
     }
 
-    // --- CÁLCULO DE MÉDIAS (Usando apenas os reportsValidos) ---
+    // --- CÁLCULO DE MÉDIAS (Usando reportsValidos) ---
     const reportsByDay = new Map<string, SingleReportData[]>();
     reportsValidos.forEach(report => {
       const reportDate = this.formatarData(report.dataHora); 
