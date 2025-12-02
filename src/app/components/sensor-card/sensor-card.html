@@ -9,6 +9,8 @@
   </div>
   <!-- Usamos [ngClass] para aplicar uma classe CSS dinâmica com base no estado do sensor -->
   <div class="status-bar" [ngClass]="dadosDoSensor.estado.toLowerCase()">
-    <span *ngIf="dadosDoSensor.estado !== 'Normal'">{{ dadosDoSensor.estado }}</span>
+    @if (dadosDoSensor.estado !== 'Normal') {
+      <span>{{ dadosDoSensor.estado }}</span>
+    }
   </div>
 </div>

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { MatTabsModule } from '@angular/material/tabs';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { LogoComponent } from '../logo/logo';
@@ -8,7 +8,7 @@ import { LogoutButtonComponent } from '../logout-button/logout-button';
 @Component({
   selector: 'app-header',
   standalone: true,
-  imports: [CommonModule, MatTabsModule, RouterLink, RouterLinkActive, LogoComponent, LogoutButtonComponent],
+  imports: [MatTabsModule, RouterLink, RouterLinkActive, LogoComponent, LogoutButtonComponent],
   templateUrl: './header.html',
   styleUrl: './header.css'
 })
