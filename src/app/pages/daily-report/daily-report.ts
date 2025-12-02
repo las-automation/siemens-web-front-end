@@ -10,10 +10,16 @@ import { MatTableModule } from '@angular/material/table';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
-import { MatCheckboxModule } from '@angular/material/checkbox'; // Importante para o checkbox
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog'; // [IMPORTANTE]
+
+// Serviços e Modelos
 import { SingleReportData } from '../../modal/single-report-data/single-report-data'; 
 import { ReportDataService } from '../../services/report-data'; 
+import { OilDataService } from '../../services/oil-data.service'; 
+import { ExtracaoOleo } from '../../modal/extracao-oleo';         
+import { OilExtractionDialogComponent } from '../../dialogs/oil-extraction-dialog/oil-extraction-dialog.component'; 
 
 @Component({
   selector: 'app-daily-report',
@@ -22,7 +28,7 @@ import { ReportDataService } from '../../services/report-data';
     CommonModule, FormsModule, MatCardModule, MatIconModule, 
     MatFormFieldModule, MatInputModule, MatButtonModule, MatTableModule,
     MatDatepickerModule, MatNativeDateModule, MatSelectModule,
-    MatCheckboxModule, MatTooltipModule
+    MatCheckboxModule, MatTooltipModule, MatDialogModule
   ],
   templateUrl: './daily-report.html',
   styleUrl: './daily-report.css',
@@ -35,15 +41,18 @@ export class DailyReportComponent implements OnInit {
   private allReports: SingleReportData[] = [];
   public dadosExibidos: SingleReportData[] = []; 
   
+  // Variáveis para o Óleo (Corrigindo o erro TS2339)
+  public todosRegistosOleo: ExtracaoOleo[] = [];
+  public totalTanquesCheios: number = 0;
+
   public isLoading: boolean = true;
   public searchPerformed: boolean = false;
 
   public startDate: Date | null = null;
   public endDate: Date | null = null;
 
-  // Filtros
   public turnoSelecionado: string = 'todos';
-  public ignorarParadas: boolean = false; // Controla o checkbox
+  public ignorarParadas: boolean = false;
   
   // KPIs
   mediaTem2C = 0;
@@ -66,33 +75,87 @@ export class DailyReportComponent implements OnInit {
     'pre3Amp', 'pre4Amp', 'excelId'
   ];
 
-  constructor(private reportService: ReportDataService) {}
+  constructor(
+    private reportService: ReportDataService,
+    private oilService: OilDataService, // Injeção Corrigida
+    private dialog: MatDialog           // Injeção Corrigida
+  ) {}
 
   ngOnInit(): void {
+    // Carrega dados de Óleo
+    this.carregarDadosOleo();
+
+    // Carrega dados de Máquinas
     this.reportService.loadAllReports().subscribe({
       next: (reports) => {
         this.allReports = reports.sort((a, b) => b.excelId - a.excelId);
         
-        console.log(`DIAGNÓSTICO: ${this.allReports.length} relatórios carregados.`);
-        
         this.totalPages = Math.ceil(this.allReports.length / this.itemsPerPage);
         this.isLoading = false;
         
-        // Calcula inicial (considera estado inicial do checkbox)
         this.calcularKPIs(this.allReports); 
         this.irParaPagina(1);
       },
-      error: (err) => {
+      error: (err: any) => { // Tipagem explícita para evitar TS7006
         console.error("Erro ao carregar dados iniciais:", err);
         this.isLoading = false;
       }
     });
   }
 
-  /**
-   * Chamado pelo botão "Filtrar".
-   * Aplica filtro de DATA e TURNO, e depois calcula KPIs.
-   */
+  // --- LÓGICA DO ÓLEO ---
+
+carregarDadosOleo(): void {
+    // Agora o método existe no serviço
+    this.oilService.getAllExtractions().subscribe({
+      // [CORREÇÃO] Adicionamos o tipo explícito ': ExtracaoOleo[]' aqui
+      next: (dados: ExtracaoOleo[]) => {
+        this.todosRegistosOleo = dados;
+        this.filtrarOleo();
+      },
+      // [CORREÇÃO] Adicionamos ': any' aqui também para evitar erros futuros
+      error: (err: any) => console.error("Erro ao carregar óleo:", err)
+    });
+  }
+
+  filtrarOleo(): void {
+    let oleoFiltrado = this.todosRegistosOleo;
+
+    if (this.startDate && this.endDate) {
+      const inicio = new Date(this.startDate); inicio.setHours(0,0,0,0);
+      const fim = new Date(this.endDate); fim.setHours(23,59,59,999);
+
+      oleoFiltrado = oleoFiltrado.filter(item => {
+        const dataItem = new Date(item.dataExtracao + 'T00:00:00'); 
+        return dataItem >= inicio && dataItem <= fim;
+      });
+    }
+
+    if (this.turnoSelecionado === 'turno1') {
+      oleoFiltrado = oleoFiltrado.filter(item => item.turno === 1);
+    } else if (this.turnoSelecionado === 'turno2') {
+      oleoFiltrado = oleoFiltrado.filter(item => item.turno === 2);
+    }
+
+    this.totalTanquesCheios = oleoFiltrado.reduce((acc, curr) => acc + curr.tanquesCompletos, 0);
+  }
+
+  // Função chamada pelo botão no HTML (Corrigindo o erro TS2339)
+  abrirRegistroOleo(): void {
+    const dialogRef = this.dialog.open(OilExtractionDialogComponent, {
+      width: '400px',
+      disableClose: true
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === true) {
+        this.carregarDadosOleo();
+      }
+    });
+  }
+
+  // --- LÓGICA DE FILTROS ---
+
   filtrarRelatorios(): void {
     if (!this.startDate || !this.endDate) {
       alert('Por favor, selecione as datas de início e fim.');
@@ -101,36 +164,35 @@ export class DailyReportComponent implements OnInit {
     
     this.searchPerformed = true;
     this.isLoading = true; 
+
+    this.filtrarOleo();
     
     this.reportService.getReportsByDateRange(this.startDate, this.endDate)
-      .subscribe(dados => {
-        
-        let resultado = dados;
+      .subscribe({
+        next: (dados) => {
+          let resultado = dados;
 
-        // Filtro de Turno
-        if (this.turnoSelecionado !== 'todos') {
-          resultado = resultado.filter(report => 
-            this.pertenceAoTurno(report.dataHora, this.turnoSelecionado)
-          );
+          if (this.turnoSelecionado !== 'todos') {
+            resultado = resultado.filter(report => 
+              this.pertenceAoTurno(report.dataHora, this.turnoSelecionado)
+            );
+          }
+
+          this.dadosExibidos = resultado; 
+          this.calcularKPIs(this.dadosExibidos);
+          
+          this.totalPages = 0; 
+          this.currentPage = 1;
+          this.isLoading = false;
+        },
+        error: (err: any) => {
+          console.error("Erro ao filtrar:", err);
+          this.isLoading = false;
         }
-
-        // Atualiza a tabela com o resultado do filtro de Data/Turno
-        this.dadosExibidos = resultado; 
-        
-        // Recalcula KPIs (Aplicando filtro de "Paradas" se o checkbox estiver marcado)
-        this.calcularKPIs(this.dadosExibidos);
-        
-        this.totalPages = 0; 
-        this.currentPage = 1;
-        this.isLoading = false;
       });
   }
 
-  /**
-   * Chamado quando o utilizador clica no Checkbox.
-   * Recalcula imediatamente usando os dados que já estão na memória.
-   */
-  public aoAlterarCheckbox(): void {
+  aoAlterarCheckbox(): void {
     const dadosAtuais = this.searchPerformed ? this.dadosExibidos : this.allReports;
     this.calcularKPIs(dadosAtuais);
   }
@@ -142,12 +204,8 @@ export class DailyReportComponent implements OnInit {
 
     const hora = date.getHours(); 
 
-    if (turno === 'turno1') {
-      return hora >= 7 && hora < 18;
-    }
-    if (turno === 'turno2') {
-      return hora >= 21 || hora < 7;
-    }
+    if (turno === 'turno1') return hora >= 7 && hora < 18;
+    if (turno === 'turno2') return hora >= 21 || hora < 7;
     return true;
   }
 
@@ -155,7 +213,9 @@ export class DailyReportComponent implements OnInit {
     this.startDate = null;
     this.endDate = null;
     this.turnoSelecionado = 'todos';
-    this.ignorarParadas = false; // Reseta o checkbox
+    this.ignorarParadas = false;
+
+    this.filtrarOleo();
 
     this.totalPages = Math.ceil(this.allReports.length / this.itemsPerPage);
     this.irParaPagina(1); 
@@ -163,14 +223,19 @@ export class DailyReportComponent implements OnInit {
     this.calcularKPIs(this.allReports); 
   }
 
-  /**
-   * Lógica Principal de Cálculo dos KPIs.
-   * Contém a regra: Se checkbox ativo, IGNORA registos onde 2+ máquinas têm < 30A.
-   */
+  // --- CÁLCULO DE KPIs ---
+
   calcularKPIs(reports: SingleReportData[]): void {
+    // [CORREÇÃO] Adicionado 'this.' para resolver TS2663
     const resetKPIs = () => {
-      this.mediaTem2C = 0; mediaQ90h = 0; mediaConz1Nivel = 0; mediaConz2Nivel = 0;
-      mediaPre1Amp = 0; mediaPre2Amp = 0; mediaPre3Amp = 0; mediaPre4Amp = 0;
+      this.mediaTem2C = 0; 
+      this.mediaQ90h = 0; 
+      this.mediaConz1Nivel = 0; 
+      this.mediaConz2Nivel = 0;
+      this.mediaPre1Amp = 0; 
+      this.mediaPre2Amp = 0; 
+      this.mediaPre3Amp = 0; 
+      this.mediaPre4Amp = 0;
     };
 
     if (!reports || reports.length === 0) {
@@ -178,93 +243,51 @@ export class DailyReportComponent implements OnInit {
       return;
     }
 
-    // --- FILTRO DE PARADAS ---
     let reportsValidos = reports;
 
     if (this.ignorarParadas) {
       reportsValidos = reports.filter(r => {
         let maquinasParadas = 0;
-
-        // Verifica cada máquina individualmente
-        // Considera "Parada" se for < 30 ou nulo
         if ((r.pre1Amp || 0) < 30) maquinasParadas++;
         if ((r.pre2Amp || 0) < 30) maquinasParadas++;
         if ((r.pre3Amp || 0) < 30) maquinasParadas++;
         if ((r.pre4Amp || 0) < 30) maquinasParadas++;
-
-        // REGRA: Se 2 ou mais máquinas estiverem paradas, IGNORA este relatório.
-        // Mantém apenas se tiver 0 ou 1 máquina parada.
         return maquinasParadas < 2; 
       });
     }
 
-    // Se após o filtro não sobrar nada, zera KPIs
     if (reportsValidos.length === 0) {
       resetKPIs();
       return;
     }
 
-    // --- CÁLCULO DE MÉDIAS (Usando reportsValidos) ---
-    const reportsByDay = new Map<string, SingleReportData[]>();
-    reportsValidos.forEach(report => {
-      const reportDate = this.formatarData(report.dataHora); 
-      if (reportDate) { 
-        const dayKey = reportDate.toISOString().split('T')[0];
-        if (!reportsByDay.has(dayKey)) {
-          reportsByDay.set(dayKey, []);
-        }
-        reportsByDay.get(dayKey)?.push(report);
-      }
-    });
-
-    const dailyAverages: { [key: string]: number[] } = {
-      tem2C: [], q90h: [], conz1Nivel: [], conz2Nivel: [],
-      pre1Amp: [], pre2Amp: [], pre3Amp: [], pre4Amp: []
+    const calculateFinalAverage = (metric: keyof SingleReportData): number => {
+      const validReports = reportsValidos.filter(r => typeof r[metric] === 'number');
+      if (validReports.length === 0) return 0;
+      const total = validReports.reduce((acc, r) => acc + (r[metric] as number), 0);
+      return total / validReports.length;
     };
 
-    const metrics: (keyof SingleReportData)[] = ['tem2C', 'q90h', 'conz1Nivel', 'conz2Nivel', 'pre1Amp', 'pre2Amp', 'pre3Amp', 'pre4Amp'];
-
-    reportsByDay.forEach(dailyReports => {
-      metrics.forEach(metric => {
-        const validReports = dailyReports.filter(r => typeof r[metric] === 'number');
-        if (validReports.length > 0) {
-          const total = validReports.reduce((acc, r) => acc + (r[metric] as number || 0), 0);
-          dailyAverages[metric].push(total / validReports.length);
-        }
-      });
-    });
-
-    const calculateFinalAverage = (dailyValues: number[]) => {
-      if (dailyValues.length === 0) return 0;
-      const total = dailyValues.reduce((acc, val) => acc + val, 0);
-      return total / dailyValues.length;
-    };
-
-    this.mediaTem2C = calculateFinalAverage(dailyAverages['tem2C']);
-    this.mediaQ90h = calculateFinalAverage(dailyAverages['q90h']);
-    this.mediaConz1Nivel = calculateFinalAverage(dailyAverages['conz1Nivel']);
-    this.mediaConz2Nivel = calculateFinalAverage(dailyAverages['conz2Nivel']);
-    this.mediaPre1Amp = calculateFinalAverage(dailyAverages['pre1Amp']);
-    this.mediaPre2Amp = calculateFinalAverage(dailyAverages['pre2Amp']);
-    this.mediaPre3Amp = calculateFinalAverage(dailyAverages['pre3Amp']);
-    this.mediaPre4Amp = calculateFinalAverage(dailyAverages['pre4Amp']);
+    this.mediaTem2C = calculateFinalAverage('tem2C');
+    this.mediaQ90h = calculateFinalAverage('q90h');
+    this.mediaConz1Nivel = calculateFinalAverage('conz1Nivel');
+    this.mediaConz2Nivel = calculateFinalAverage('conz2Nivel');
+    this.mediaPre1Amp = calculateFinalAverage('pre1Amp');
+    this.mediaPre2Amp = calculateFinalAverage('pre2Amp');
+    this.mediaPre3Amp = calculateFinalAverage('pre3Amp');
+    this.mediaPre4Amp = calculateFinalAverage('pre4Amp');
   }
 
   public formatarData(dataString: string): Date | null {
     if (!dataString) return null;
     const date = new Date(dataString);
-    if (isNaN(date.getTime())) {
-      console.warn(`AVISO: Data string inválida: ${dataString}`);
-      return null;
-    }
-    return date;
+    return isNaN(date.getTime()) ? null : date;
   }
 
   imprimirKPIs(): void {
     window.print();
   }
 
-  // --- Paginação ---
   public irParaPagina(pagina: number): void {
     if (pagina < 1 || pagina > this.totalPages || this.allReports.length === 0) return;
     this.currentPage = pagina;

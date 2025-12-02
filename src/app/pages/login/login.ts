@@ -2,7 +2,7 @@
 // Ele já importa o LogoComponent e tem a lógica de login correta.
 
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -14,7 +14,7 @@ import { LogoComponent } from "../../components/logo/logo";
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule, LogoComponent],
+  imports: [FormsModule, MatCardModule, MatFormFieldModule, MatInputModule, MatButtonModule, LogoComponent],
   templateUrl: './login.html',
   styleUrls: ['./login.css']
 })

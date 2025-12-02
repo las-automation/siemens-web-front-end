@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
+
 import { FormsModule } from '@angular/forms';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -19,10 +19,18 @@ import { ExtracaoOleo } from '../../modal/extracao-oleo';
   selector: 'app-oil-extraction-dialog',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
-    MatButtonModule, MatSelectModule, MatRadioModule, MatDatepickerModule, 
-    MatNativeDateModule, MatIconModule, MatDividerModule
-  ],
+    FormsModule,
+    MatDialogModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatSelectModule,
+    MatRadioModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    MatIconModule,
+    MatDividerModule
+],
   templateUrl: './oil-extraction-dialog.component.html',
   styleUrl: './oil-extraction-dialog.component.css',
   providers: [{ provide: MAT_DATE_LOCALE, useValue: 'pt-BR' }]

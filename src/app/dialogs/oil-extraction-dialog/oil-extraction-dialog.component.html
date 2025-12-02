@@ -4,7 +4,7 @@
 
 <mat-dialog-content>
   <div style="display:flex; flex-direction:column; gap: 15px; padding-top: 10px;">
-    
+
     <div style="display:flex; gap:15px;">
       <mat-form-field appearance="outline" style="flex:1;">
         <mat-label>Data</mat-label>
@@ -37,13 +37,15 @@
         <mat-radio-button value="sim">Sim</mat-radio-button>
       </mat-radio-group>
 
-      <div *ngIf="temIncompleto === 'sim'" style="margin-top:10px;">
-        <mat-form-field appearance="outline" style="width:100%;">
-          <mat-label>Qual a altura em cm?</mat-label>
-          <input matInput type="number" min="0" max="99" [(ngModel)]="alturaIncompleto">
-          <span matSuffix>cm</span>
-        </mat-form-field>
-      </div>
+      @if (temIncompleto === 'sim') {
+        <div style="margin-top:10px;">
+          <mat-form-field appearance="outline" style="width:100%;">
+            <mat-label>Qual a altura em cm?</mat-label>
+            <input matInput type="number" min="0" max="99" [(ngModel)]="alturaIncompleto">
+            <span matSuffix>cm</span>
+          </mat-form-field>
+        </div>
+      }
     </div>
 
     <mat-divider></mat-divider>

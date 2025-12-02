@@ -3,7 +3,7 @@
 
   <mat-card class="filter-card">
     <div class="filter-content">
-      
+
       <div class="period-group">
         <div class="group-label">Período 1 (Base)</div>
         <div class="group-inputs">
@@ -74,53 +74,75 @@
     <div class="feedback-bar">
       <div class="feedback-item" [ngClass]="turnoPeriodo1">
         <span class="fb-label">P1:</span>
-        <mat-icon *ngIf="turnoPeriodo1 === 'todos'">calendar_today</mat-icon>
-        <mat-icon *ngIf="turnoPeriodo1 === 'turno1'">wb_sunny</mat-icon>
-        <mat-icon *ngIf="turnoPeriodo1 === 'turno2'">nights_stay</mat-icon>
+        @if (turnoPeriodo1 === 'todos') {
+          <mat-icon>calendar_today</mat-icon>
+        }
+        @if (turnoPeriodo1 === 'turno1') {
+          <mat-icon>wb_sunny</mat-icon>
+        }
+        @if (turnoPeriodo1 === 'turno2') {
+          <mat-icon>nights_stay</mat-icon>
+        }
         <span>{{ turnoPeriodo1 === 'todos' ? 'Total' : (turnoPeriodo1 === 'turno1' ? 'Dia' : 'Noite') }}</span>
       </div>
 
       <div class="feedback-item" [ngClass]="turnoPeriodo2">
         <span class="fb-label">P2:</span>
-        <mat-icon *ngIf="turnoPeriodo2 === 'todos'">calendar_today</mat-icon>
-        <mat-icon *ngIf="turnoPeriodo2 === 'turno1'">wb_sunny</mat-icon>
-        <mat-icon *ngIf="turnoPeriodo2 === 'turno2'">nights_stay</mat-icon>
+        @if (turnoPeriodo2 === 'todos') {
+          <mat-icon>calendar_today</mat-icon>
+        }
+        @if (turnoPeriodo2 === 'turno1') {
+          <mat-icon>wb_sunny</mat-icon>
+        }
+        @if (turnoPeriodo2 === 'turno2') {
+          <mat-icon>nights_stay</mat-icon>
+        }
         <span>{{ turnoPeriodo2 === 'todos' ? 'Total' : (turnoPeriodo2 === 'turno1' ? 'Dia' : 'Noite') }}</span>
       </div>
     </div>
 
   </mat-card>
 
-  <div *ngIf="isLoading" class="loading-message">
-    <mat-icon class="spin">autorenew</mat-icon>
-    <p>A calcular comparação...</p>
-  </div>
-
-  <div *ngIf="!isLoading && comparisonDone" class="results-container">
-    <h3>Resultados da Comparação</h3>
-    <div class="kpi-grid">
-      <mat-card class="kpi-card" *ngFor="let result of results">
-        <p class="kpi-title">{{ result.metricName }}</p>
-        
-        <div class="comparison-values">
-          <div class="p-value">
-            <span class="label">P1 ({{ turnoPeriodo1 === 'todos' ? 'T' : (turnoPeriodo1 === 'turno1' ? 'D' : 'N') }})</span>
-            <span class="val">{{ result.value1.toFixed(1) }}{{ result.unit }}</span>
-          </div>
-          <div class="p-value">
-            <span class="label">P2 ({{ turnoPeriodo2 === 'todos' ? 'T' : (turnoPeriodo2 === 'turno1' ? 'D' : 'N') }})</span>
-            <span class="val">{{ result.value2.toFixed(1) }}{{ result.unit }}</span>
-          </div>
-        </div>
-
-        <div class="difference" [ngClass]="{'positive': result.difference > 0, 'negative': result.difference < 0}">
-          <mat-icon *ngIf="result.difference > 0">arrow_upward</mat-icon>
-          <mat-icon *ngIf="result.difference < 0">arrow_downward</mat-icon>
-          <mat-icon *ngIf="result.difference === 0">remove</mat-icon>
-          <span>{{ result.difference.toFixed(1) }}%</span>
-        </div>
-        <p class="kpi-sub-title">Variação</p>
-      </mat-card>
+  @if (isLoading) {
+    <div class="loading-message">
+      <mat-icon class="spin">autorenew</mat-icon>
+      <p>A calcular comparação...</p>
     </div>
-  </div>
+  }
+
+  @if (!isLoading && comparisonDone) {
+    <div class="results-container">
+      <h3>Resultados da Comparação</h3>
+      <div class="kpi-grid">
+        @for (result of results; track result) {
+          <mat-card class="kpi-card">
+            <p class="kpi-title">{{ result.metricName }}</p>
+            <div class="comparison-values">
+              <div class="p-value">
+                <span class="label">P1 ({{ turnoPeriodo1 === 'todos' ? 'T' : (turnoPeriodo1 === 'turno1' ? 'D' : 'N') }})</span>
+                <span class="val">{{ result.value1.toFixed(1) }}{{ result.unit }}</span>
+              </div>
+              <div class="p-value">
+                <span class="label">P2 ({{ turnoPeriodo2 === 'todos' ? 'T' : (turnoPeriodo2 === 'turno1' ? 'D' : 'N') }})</span>
+                <span class="val">{{ result.value2.toFixed(1) }}{{ result.unit }}</span>
+              </div>
+            </div>
+            <div class="difference" [ngClass]="{'positive': result.difference > 0, 'negative': result.difference < 0}">
+              @if (result.difference > 0) {
+                <mat-icon>arrow_upward</mat-icon>
+              }
+              @if (result.difference < 0) {
+                <mat-icon>arrow_downward</mat-icon>
+              }
+              @if (result.difference === 0) {
+                <mat-icon>remove</mat-icon>
+              }
+              <span>{{ result.difference.toFixed(1) }}%</span>
+            </div>
+            <p class="kpi-sub-title">Variação</p>
+          </mat-card>
+        }
+      </div>
+    </div>
+  }
 </div>
