@@ -12,7 +12,8 @@ import { MatNativeDateModule, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog'; // [IMPORTANTE]
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDividerModule } from '@angular/material/divider'; // [NOVO] Import necessário
 
 // Serviços e Modelos
 import { SingleReportData } from '../../modal/single-report-data/single-report-data'; 
@@ -28,7 +29,8 @@ import { OilExtractionDialogComponent } from '../../dialogs/oil-extraction-dialo
     CommonModule, FormsModule, MatCardModule, MatIconModule, 
     MatFormFieldModule, MatInputModule, MatButtonModule, MatTableModule,
     MatDatepickerModule, MatNativeDateModule, MatSelectModule,
-    MatCheckboxModule, MatTooltipModule, MatDialogModule
+    MatCheckboxModule, MatTooltipModule, MatDialogModule,
+    MatDividerModule // [NOVO] Adicionado aqui
   ],
   templateUrl: './daily-report.html',
   styleUrl: './daily-report.css',
@@ -41,9 +43,10 @@ export class DailyReportComponent implements OnInit {
   private allReports: SingleReportData[] = [];
   public dadosExibidos: SingleReportData[] = []; 
   
-  // Variáveis para o Óleo (Corrigindo o erro TS2339)
+  // Variáveis para o Óleo
   public todosRegistosOleo: ExtracaoOleo[] = [];
   public totalTanquesCheios: number = 0;
+  public registroOleoAtual: ExtracaoOleo | null = null; // Para edição
 
   public isLoading: boolean = true;
   public searchPerformed: boolean = false;
@@ -77,26 +80,23 @@ export class DailyReportComponent implements OnInit {
 
   constructor(
     private reportService: ReportDataService,
-    private oilService: OilDataService, // Injeção Corrigida
-    private dialog: MatDialog           // Injeção Corrigida
+    private oilService: OilDataService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
-    // Carrega dados de Óleo
     this.carregarDadosOleo();
 
-    // Carrega dados de Máquinas
     this.reportService.loadAllReports().subscribe({
       next: (reports) => {
         this.allReports = reports.sort((a, b) => b.excelId - a.excelId);
-        
         this.totalPages = Math.ceil(this.allReports.length / this.itemsPerPage);
         this.isLoading = false;
         
         this.calcularKPIs(this.allReports); 
         this.irParaPagina(1);
       },
-      error: (err: any) => { // Tipagem explícita para evitar TS7006
+      error: (err: any) => {
         console.error("Erro ao carregar dados iniciais:", err);
         this.isLoading = false;
       }
@@ -105,15 +105,12 @@ export class DailyReportComponent implements OnInit {
 
   // --- LÓGICA DO ÓLEO ---
 
-carregarDadosOleo(): void {
-    // Agora o método existe no serviço
+  carregarDadosOleo(): void {
     this.oilService.getAllExtractions().subscribe({
-      // [CORREÇÃO] Adicionamos o tipo explícito ': ExtracaoOleo[]' aqui
       next: (dados: ExtracaoOleo[]) => {
         this.todosRegistosOleo = dados;
         this.filtrarOleo();
       },
-      // [CORREÇÃO] Adicionamos ': any' aqui também para evitar erros futuros
       error: (err: any) => console.error("Erro ao carregar óleo:", err)
     });
   }
@@ -138,9 +135,15 @@ carregarDadosOleo(): void {
     }
 
     this.totalTanquesCheios = oleoFiltrado.reduce((acc, curr) => acc + curr.tanquesCompletos, 0);
+
+    // Lógica para habilitar botão de edição
+    if (oleoFiltrado.length === 1 && this.turnoSelecionado !== 'todos') {
+      this.registroOleoAtual = oleoFiltrado[0];
+    } else {
+      this.registroOleoAtual = null;
+    }
   }
 
-  // Função chamada pelo botão no HTML (Corrigindo o erro TS2339)
   abrirRegistroOleo(): void {
     const dialogRef = this.dialog.open(OilExtractionDialogComponent, {
       width: '400px',
@@ -148,10 +151,36 @@ carregarDadosOleo(): void {
     });
 
     dialogRef.afterClosed().subscribe(result => {
-      if (result === true) {
-        this.carregarDadosOleo();
-      }
+      if (result === true) this.carregarDadosOleo();
     });
+  }
+
+  editarRegistroOleo(): void {
+    if (!this.registroOleoAtual) return;
+
+    const dialogRef = this.dialog.open(OilExtractionDialogComponent, {
+      width: '400px',
+      disableClose: true,
+      data: this.registroOleoAtual
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === true) this.carregarDadosOleo();
+    });
+  }
+
+  apagarRegistroOleo(): void {
+    if (!this.registroOleoAtual || !this.registroOleoAtual.id) return;
+
+    if (confirm('Tem certeza que deseja apagar este registo de óleo?')) {
+      this.oilService.deleteExtraction(this.registroOleoAtual.id).subscribe({
+        next: () => {
+          alert('Registo apagado.');
+          this.carregarDadosOleo();
+        },
+        error: (err: any) => alert('Erro ao apagar.')
+      });
+    }
   }
 
   // --- LÓGICA DE FILTROS ---
@@ -165,22 +194,19 @@ carregarDadosOleo(): void {
     this.searchPerformed = true;
     this.isLoading = true; 
 
-    this.filtrarOleo();
+    this.filtrarOleo(); // Atualiza óleo
     
     this.reportService.getReportsByDateRange(this.startDate, this.endDate)
       .subscribe({
         next: (dados) => {
           let resultado = dados;
-
           if (this.turnoSelecionado !== 'todos') {
             resultado = resultado.filter(report => 
               this.pertenceAoTurno(report.dataHora, this.turnoSelecionado)
             );
           }
-
           this.dadosExibidos = resultado; 
           this.calcularKPIs(this.dadosExibidos);
-          
           this.totalPages = 0; 
           this.currentPage = 1;
           this.isLoading = false;
@@ -201,7 +227,6 @@ carregarDadosOleo(): void {
     if (!dataString) return false;
     const date = new Date(dataString);
     if (isNaN(date.getTime())) return false;
-
     const hora = date.getHours(); 
 
     if (turno === 'turno1') return hora >= 7 && hora < 18;
@@ -226,16 +251,11 @@ carregarDadosOleo(): void {
   // --- CÁLCULO DE KPIs ---
 
   calcularKPIs(reports: SingleReportData[]): void {
-    // [CORREÇÃO] Adicionado 'this.' para resolver TS2663
     const resetKPIs = () => {
-      this.mediaTem2C = 0; 
-      this.mediaQ90h = 0; 
-      this.mediaConz1Nivel = 0; 
-      this.mediaConz2Nivel = 0;
-      this.mediaPre1Amp = 0; 
-      this.mediaPre2Amp = 0; 
-      this.mediaPre3Amp = 0; 
-      this.mediaPre4Amp = 0;
+      this.mediaTem2C = 0; this.mediaQ90h = 0; 
+      this.mediaConz1Nivel = 0; this.mediaConz2Nivel = 0;
+      this.mediaPre1Amp = 0; this.mediaPre2Amp = 0; 
+      this.mediaPre3Amp = 0; this.mediaPre4Amp = 0;
     };
 
     if (!reports || reports.length === 0) {
