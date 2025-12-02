@@ -15,6 +15,20 @@ export class OilDataService {
   /**
    * Salva um novo registo de extração de óleo.
    */
+
+  updateExtraction(id: number, data: ExtracaoOleo): Observable<void> {
+    const token = localStorage.getItem('user_token');
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+    return this.http.put<void>(`${this.API_URL}/${id}`, data, { headers });
+  }
+
+  // [NOVO] Apagar
+  deleteExtraction(id: number): Observable<void> {
+    const token = localStorage.getItem('user_token');
+    const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });
+    return this.http.delete<void>(`${this.API_URL}/${id}`, { headers });
+  }
+  
   saveExtraction(data: ExtracaoOleo): Observable<void> {
     const token = localStorage.getItem('user_token');
     const headers = new HttpHeaders({ 'Authorization': `Bearer ${token}` });

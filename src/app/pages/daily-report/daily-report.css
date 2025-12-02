@@ -35,6 +35,13 @@
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
+/* DESTAQUE DO CARD DE ÓLEO */
+.oil-card-style {
+  /* Pode adicionar um fundo leve para destacar */
+  background-color: #fff8e1; 
+  border-left: 4px solid #ff9800; /* Laranja forte */
+}
+
 .kpi-title {
   margin: 0;
   color: #5f6368; /* Cinza profissional */
