@@ -61,7 +61,7 @@ export class OilExtractionDialogComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Se 'data' existir, estamos no modo de EDIÇÃO
+    // Se 'data' existir, significa que clicaste em "Editar"
     if (this.data) {
       this.isEditMode = true;
       this.currentId = this.data.id || null;
@@ -72,12 +72,12 @@ export class OilExtractionDialogComponent implements OnInit {
       this.turno = this.data.turno;
       
       // Converte a string 'YYYY-MM-DD' de volta para objeto Date
-      // Adicionamos 'T00:00:00' para evitar problemas de fuso horário ao converter
+      // Adicionamos 'T00:00:00' para garantir que o dia fique correto (evita problemas de fuso horário)
       if (this.data.dataExtracao) {
         this.dataRegistro = new Date(this.data.dataExtracao + 'T00:00:00');
       }
 
-      // Lógica do tanque incompleto
+      // Lógica do tanque incompleto (se altura > 0, marca como 'sim')
       if (this.data.alturaIncompletoCm && this.data.alturaIncompletoCm > 0) {
         this.temIncompleto = 'sim';
         this.alturaIncompleto = this.data.alturaIncompletoCm;
@@ -86,6 +86,7 @@ export class OilExtractionDialogComponent implements OnInit {
   }
 
   salvar(): void {
+    // Validações básicas
     if (this.tanqueGrande === null) {
       alert("Preencha o nível do Tanque Grande.");
       return;
@@ -97,23 +98,29 @@ export class OilExtractionDialogComponent implements OnInit {
         alert("Digite a altura do tanque incompleto.");
         return;
       }
-      alturaFinal = this.alturaIncompleto;
+      alturaFinal = Number(this.alturaIncompleto);
     }
 
     this.isSaving = true;
 
+    // Ajuste de Data para garantir formato correto YYYY-MM-DD local
+    const ano = this.dataRegistro.getFullYear();
+    const mes = String(this.dataRegistro.getMonth() + 1).padStart(2, '0');
+    const dia = String(this.dataRegistro.getDate()).padStart(2, '0');
+    const dataFormatada = `${ano}-${mes}-${dia}`;
+
     // Monta o objeto para enviar
     const payload: ExtracaoOleo = {
-      // Se for edição, mantém o ID
+      // Se for edição, mantém o ID original
       ...(this.isEditMode && this.currentId ? { id: this.currentId } : {}),
-      tanquesCompletos: this.qtdCheios,
+      tanquesCompletos: Number(this.qtdCheios),
       alturaIncompletoCm: alturaFinal,
-      tanqueGrande: this.tanqueGrande,
-      turno: this.turno,
-      dataExtracao: this.dataRegistro.toISOString().split('T')[0]
+      tanqueGrande: Number(this.tanqueGrande),
+      turno: Number(this.turno),
+      dataExtracao: dataFormatada
     };
 
-    // Decide qual método chamar no serviço
+    // Decide qual método chamar no serviço (POST para novo, PUT para editar)
     const request$ = this.isEditMode && this.currentId
       ? this.oilService.updateExtraction(this.currentId, payload) // PUT
       : this.oilService.saveExtraction(payload); // POST
@@ -121,17 +128,20 @@ export class OilExtractionDialogComponent implements OnInit {
     request$.subscribe({
       next: () => {
         alert(this.isEditMode ? "Atualizado com sucesso!" : "Salvo com sucesso!");
-        this.dialogRef.close(true);
+        this.dialogRef.close(true); // Retorna 'true' para avisar que salvou
       },
       error: (err) => {
-        console.error(err);
-        alert("Erro ao processar dados.");
+        console.error('Erro ao salvar:', err);
+        const status = err.status || 'Desconhecido';
+        if (status === 403) alert(`Acesso Negado (403). Verifique o login.`);
+        else alert(`Erro ao processar dados. Código: ${status}`);
+        
         this.isSaving = false;
       }
     });
   }
 
   cancelar(): void {
-    this.dialogRef.close(false);
+    this.dialogRef.close(false); // Retorna 'false' (não salvou)
   }
 }
