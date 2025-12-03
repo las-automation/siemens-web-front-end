@@ -283,7 +283,7 @@ export class DailyReportComponent implements OnInit {
 
   // --- CÁLCULO DE KPIs DE MÁQUINAS (COM EFICIÊNCIA) ---
 
-  calcularKPIs(reports: SingleReportData[]): void {
+calcularKPIs(reports: SingleReportData[]): void {
     const resetKPIs = () => {
       this.mediaTem2C = 0; this.mediaQ90h = 0; 
       this.mediaConz1Nivel = 0; this.mediaConz2Nivel = 0;
@@ -334,20 +334,31 @@ export class DailyReportComponent implements OnInit {
     this.mediaPre3Amp = calculateFinalAverage('pre3Amp');
     this.mediaPre4Amp = calculateFinalAverage('pre4Amp');
 
-    // --- CÁLCULO DE EFICIÊNCIA (NOVO) ---
+    // --- CÁLCULO DE EFICIÊNCIA ---
     
-    // 1. Amperagem (Base 120)
+    // 1. Amperagem (Meta: 120)
     this.effPre1 = (this.mediaPre1Amp / this.TARGET_AMP) * 100;
     this.effPre2 = (this.mediaPre2Amp / this.TARGET_AMP) * 100;
     this.effPre3 = (this.mediaPre3Amp / this.TARGET_AMP) * 100;
     this.effPre4 = (this.mediaPre4Amp / this.TARGET_AMP) * 100;
 
-    // 2. Níveis (Base 50)
+    // 2. Níveis (Meta: 50)
     this.effConz1 = (this.mediaConz1Nivel / this.TARGET_LEVEL) * 100;
     this.effConz2 = (this.mediaConz2Nivel / this.TARGET_LEVEL) * 100;
 
-    // Eficiência Global (Média das 4 máquinas principais de Amperagem)
-    this.mediaQ90h = (this.effPre1 + this.effPre2 + this.effPre3 + this.effPre4) / 4;
+    // 3. Eficiência Global (REGRA DE NEGÓCIO: Descartar a menor das 4)
+    // Isso garante que se uma máquina estiver desligada (0%), ela não puxa a média para baixo.
+    
+    const efficiencies = [this.effPre1, this.effPre2, this.effPre3, this.effPre4];
+    
+    // Ordenar do menor para o maior (ex: [0, 60, 80, 90])
+    efficiencies.sort((a, b) => a - b);
+    
+    // Pegar as 3 maiores (ignora o índice 0, que é a menor eficiência)
+    const sumTop3 = efficiencies[1] + efficiencies[2] + efficiencies[3];
+    
+    // Divide por 3 para obter a média das máquinas ativas
+    this.mediaQ90h = sumTop3 / 3;
   }
 
   public formatarData(dataString: string): Date | null {
