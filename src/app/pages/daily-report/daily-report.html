@@ -4,13 +4,13 @@
     <div class="oil-card-container">
       
       <mat-card class="kpi-card oil-kpi">
-        <div>
+        <div style="width: 100%;">
           <p class="kpi-title" style="color: #e65100;">Extração de Óleo</p>
           
           <div style="display: flex; justify-content: space-between; align-items: center; gap: 20px; margin-top: 10px;">
             
             <div style="text-align: center;">
-              <div style="display: flex; align-items: baseline; gap: 5px;">
+              <div style="display: flex; align-items: baseline; gap: 5px; justify-content: center;">
                 <mat-icon style="color:#ff9800; font-size: 2.5rem; width: 2.5rem; height: 2.5rem;">water_drop</mat-icon>
                 <p class="kpi-value" style="color: #e65100; font-size: 3rem; margin: 0;">{{ totalTanquesCheios }}</p>
               </div>
@@ -50,6 +50,14 @@
           </div>
         }
         
+        <!-- AVISO DE DUPLICIDADE (NOVO) -->
+        @if (registroOleoAtual && totalTanquesCheios > registroOleoAtual.tanquesCompletos) {
+          <div style="margin-top: 5px; background: #fff3e0; color: #e65100; padding: 8px; border-radius: 4px; font-size: 0.8rem; display: flex; align-items: center; gap: 6px;">
+             <mat-icon style="font-size: 16px; height: 16px; width: 16px;">warning</mat-icon>
+             <span>Atenção: Total ({{totalTanquesCheios}}) inclui soma de duplicatas.</span>
+          </div>
+        }
+
         @if (!registroOleoAtual && totalTanquesCheios > 0) {
           <div class="help-text">
             <small>Filtre por <strong>1 Dia</strong> e <strong>1 Turno</strong> específico para editar.</small>
@@ -70,53 +78,85 @@
         <p class="kpi-sub-title">Média diária no período</p>
       </div>
     </mat-card>
+
+    <!-- CARD EFICIÊNCIA GLOBAL (CALCULADA) -->
     <mat-card class="kpi-card">
       <div>
-        <p class="kpi-title">Média de Eficiência</p>
-        <p class="kpi-value">{{ mediaQ90h.toFixed(1) }} %</p>
-        <p class="kpi-sub-title">Média diária no período</p>
+        <p class="kpi-title">Eficiência Global</p>
+        <p class="kpi-value" [style.color]="mediaQ90h >= 80 ? '#2e7d32' : (mediaQ90h >= 50 ? '#f57c00' : '#c62828')">
+          {{ mediaQ90h.toFixed(1) }} %
+        </p>
+        <p class="kpi-sub-title">Baseada na meta de <strong>{{ TARGET_AMP }} A</strong></p>
       </div>
     </mat-card>
+
     <mat-card class="kpi-card">
-      <div>
+      <div style="width: 100%;">
         <p class="kpi-title">Média Nível Conz1</p>
         <p class="kpi-value">{{ mediaConz1Nivel.toFixed(2) }}</p>
-        <p class="kpi-sub-title">Média diária no período</p>
+        <!-- Eficiência Conz1 -->
+        <div class="machine-eff" [ngClass]="{'good': effConz1 >= 80, 'bad': effConz1 < 80}">
+          <mat-icon style="font-size: 1rem; height: 1rem; width: 1rem;">speed</mat-icon>
+          <span>Efic: <strong>{{ effConz1.toFixed(0) }}%</strong> (Meta 50)</span>
+        </div>
       </div>
     </mat-card>
+
     <mat-card class="kpi-card">
-      <div>
+      <div style="width: 100%;">
         <p class="kpi-title">Média Nível Conz2</p>
         <p class="kpi-value">{{ mediaConz2Nivel.toFixed(2) }}</p>
-        <p class="kpi-sub-title">Média diária no período</p>
+        <!-- Eficiência Conz2 -->
+        <div class="machine-eff" [ngClass]="{'good': effConz2 >= 80, 'bad': effConz2 < 80}">
+          <mat-icon style="font-size: 1rem; height: 1rem; width: 1rem;">speed</mat-icon>
+          <span>Efic: <strong>{{ effConz2.toFixed(0) }}%</strong> (Meta 50)</span>
+        </div>
       </div>
     </mat-card>
+
+    <!-- CARDS DE MÁQUINAS (AMPERAGEM) COM EFICIÊNCIA -->
     <mat-card class="kpi-card">
-      <div>
-        <p class="kpi-title">Média Amp Pre1</p>
+      <div style="width: 100%;">
+        <p class="kpi-title">Máquina 1 (Amp)</p>
         <p class="kpi-value">{{ mediaPre1Amp.toFixed(2) }} A</p>
-        <p class="kpi-sub-title">Média diária no período</p>
+        
+        <div class="machine-eff" [ngClass]="{'good': effPre1 >= 80, 'bad': effPre1 < 80}">
+          <mat-icon style="font-size: 1rem; height: 1rem; width: 1rem;">speed</mat-icon>
+          <span>Efic: <strong>{{ effPre1.toFixed(0) }}%</strong> (Meta 120)</span>
+        </div>
       </div>
     </mat-card>
+
     <mat-card class="kpi-card">
-      <div>
-        <p class="kpi-title">Média Amp Pre2</p>
+      <div style="width: 100%;">
+        <p class="kpi-title">Máquina 2 (Amp)</p>
         <p class="kpi-value">{{ mediaPre2Amp.toFixed(2) }} A</p>
-        <p class="kpi-sub-title">Média diária no período</p>
+        <div class="machine-eff" [ngClass]="{'good': effPre2 >= 80, 'bad': effPre2 < 80}">
+          <mat-icon style="font-size: 1rem; height: 1rem; width: 1rem;">speed</mat-icon>
+          <span>Efic: <strong>{{ effPre2.toFixed(0) }}%</strong> (Meta 120)</span>
+        </div>
       </div>
     </mat-card>
+
     <mat-card class="kpi-card">
-      <div>
-        <p class="kpi-title">Média Amp Pre3</p>
+      <div style="width: 100%;">
+        <p class="kpi-title">Máquina 3 (Amp)</p>
         <p class="kpi-value">{{ mediaPre3Amp.toFixed(2) }} A</p>
-        <p class="kpi-sub-title">Média diária no período</p>
+        <div class="machine-eff" [ngClass]="{'good': effPre3 >= 80, 'bad': effPre3 < 80}">
+          <mat-icon style="font-size: 1rem; height: 1rem; width: 1rem;">speed</mat-icon>
+          <span>Efic: <strong>{{ effPre3.toFixed(0) }}%</strong> (Meta 120)</span>
+        </div>
       </div>
     </mat-card>
+
     <mat-card class="kpi-card">
-      <div>
-        <p class="kpi-title">Média Amp Pre4</p>
+      <div style="width: 100%;">
+        <p class="kpi-title">Máquina 4 (Amp)</p>
         <p class="kpi-value">{{ mediaPre4Amp.toFixed(2) }} A</p>
-        <p class="kpi-sub-title">Média diária no período</p>
+        <div class="machine-eff" [ngClass]="{'good': effPre4 >= 80, 'bad': effPre4 < 80}">
+          <mat-icon style="font-size: 1rem; height: 1rem; width: 1rem;">speed</mat-icon>
+          <span>Efic: <strong>{{ effPre4.toFixed(0) }}%</strong> (Meta 120)</span>
+        </div>
       </div>
     </mat-card>
   </div>

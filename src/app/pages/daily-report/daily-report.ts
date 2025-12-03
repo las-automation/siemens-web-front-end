@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit, Injectable } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -12,299 +12,15 @@ import { MatNativeDateModule, MAT_DATE_LOCALE } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatRadioModule } from '@angular/material/radio';
-import { of, Observable } from 'rxjs';
 
-// --- INTERFACES (Simuladas para o exemplo) ---
-export interface ExtracaoOleo {
-  id?: number;
-  tanquesCompletos: number;
-  alturaIncompletoCm: number;
-  tanqueGrande: number;
-  turno: number;
-  dataExtracao: string;
-}
+import { SingleReportData } from '../../modal/single-report-data/single-report-data'; 
+import { ReportDataService } from '../../services/report-data'; 
+import { OilDataService } from '../../services/oil-data.service'; 
+import { ExtracaoOleo } from '../../modal/extracao-oleo';         
+import { OilExtractionDialogComponent } from '../../dialogs/oil-extraction-dialog/oil-extraction-dialog.component'; 
 
-export interface SingleReportData {
-  reportId: number;
-  dataHora: string;
-  usuario: string;
-  tem2C: number;
-  q90h: number;
-  conz1Nivel: number;
-  conz2Nivel: number;
-  pre1Amp: number;
-  pre2Amp: number;
-  pre3Amp: number;
-  pre4Amp: number;
-  excelId: number;
-}
-
-// --- SERVICES (Mocks para o exemplo funcionar na visualização) ---
-@Injectable({ providedIn: 'root' })
-export class OilDataService {
-  // Dados simulados
-  private mockData: ExtracaoOleo[] = [
-    { id: 1, tanquesCompletos: 6, alturaIncompletoCm: 176, tanqueGrande: 4.37, turno: 1, dataExtracao: '2025-02-12' },
-    { id: 2, tanquesCompletos: 6, alturaIncompletoCm: 176, tanqueGrande: 4.37, turno: 1, dataExtracao: '2025-02-12' } // Simulando a duplicidade
-  ];
-
-  getAllExtractions(): Observable<ExtracaoOleo[]> {
-    return of(this.mockData);
-  }
-  saveExtraction(data: ExtracaoOleo): Observable<any> {
-    this.mockData.push({ ...data, id: Date.now() });
-    return of(true);
-  }
-  updateExtraction(id: number, data: ExtracaoOleo): Observable<any> {
-    const index = this.mockData.findIndex(d => d.id === id);
-    if (index > -1) this.mockData[index] = data;
-    return of(true);
-  }
-  deleteExtraction(id: number): Observable<any> {
-    this.mockData = this.mockData.filter(d => d.id !== id);
-    return of(true);
-  }
-}
-
-@Injectable({ providedIn: 'root' })
-export class ReportDataService {
-  loadAllReports(): Observable<SingleReportData[]> {
-    return of([]);
-  }
-  getReportsByDateRange(start: Date, end: Date): Observable<SingleReportData[]> {
-    return of([]);
-  }
-}
-
-// --- COMPONENT: OIL EXTRACTION DIALOG (Incluído no mesmo arquivo para compilação) ---
-@Component({
-  selector: 'app-oil-extraction-dialog',
-  standalone: true,
-  imports: [
-    CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
-    MatButtonModule, MatSelectModule, MatRadioModule, MatDatepickerModule, 
-    MatNativeDateModule, MatIconModule, MatDividerModule
-  ],
-  template: `
-    <h2 mat-dialog-title style="display:flex; align-items:center; gap:10px;">
-      <mat-icon>water_drop</mat-icon> 
-      {{ isEditMode ? 'Editar Registo' : 'Novo Registo de Óleo' }}
-    </h2>
-
-    <mat-dialog-content>
-      
-      @if (isDuplicate) {
-        <div style="background-color: #ffebee; color: #c62828; padding: 10px; border-radius: 4px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-          <mat-icon>error</mat-icon>
-          <span><strong>Atenção:</strong> Já existe um registo para esta Data e Turno.</span>
-        </div>
-      }
-
-      <div style="display:flex; flex-direction:column; gap: 15px; padding-top: 10px;">
-
-        <div style="display:flex; gap:15px;">
-          <mat-form-field appearance="outline" style="flex:1;">
-            <mat-label>Data</mat-label>
-            <input matInput [matDatepicker]="picker" [(ngModel)]="dataRegistro" (dateChange)="verificarDuplicidade()">
-            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-            <mat-datepicker #picker></mat-datepicker>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" style="flex:1;">
-            <mat-label>Turno</mat-label>
-            <mat-select [(ngModel)]="turno" (selectionChange)="verificarDuplicidade()">
-              <mat-option [value]="1">Turno 1</mat-option>
-              <mat-option [value]="2">Turno 2</mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-
-        <mat-divider></mat-divider>
-
-        <div>
-          <label style="font-weight:500;">Quantos tanques cheios?</label>
-          <mat-form-field appearance="outline" style="width:100%; margin-top:5px;">
-            <input matInput type="number" min="0" [(ngModel)]="qtdCheios" placeholder="Ex: 2">
-            <span matSuffix>unid.</span>
-          </mat-form-field>
-        </div>
-
-        <div>
-          <label style="font-weight:500; display:block; margin-bottom:5px;">Ficou algum incompleto?</label>
-          <mat-radio-group [(ngModel)]="temIncompleto" color="primary">
-            <mat-radio-button value="nao" style="margin-right:15px;">Não</mat-radio-button>
-            <mat-radio-button value="sim">Sim</mat-radio-button>
-          </mat-radio-group>
-
-          @if (temIncompleto === 'sim') {
-            <div style="margin-top:10px;">
-              <mat-form-field appearance="outline" style="width:100%;">
-                <mat-label>Qual a altura em cm?</mat-label>
-                <input matInput type="number" min="0" max="99" [(ngModel)]="alturaIncompleto">
-                <span matSuffix>cm</span>
-              </mat-form-field>
-            </div>
-          }
-        </div>
-
-        <div style="background-color: #f5f5f5; padding: 10px; border-radius: 8px;">
-          <label style="font-weight:500;">Nível do Tanque Grande:</label>
-          <mat-form-field appearance="outline" style="width:100%; margin-top:5px;">
-            <input matInput type="number" step="0.1" [(ngModel)]="tanqueGrande" placeholder="0.0 a 6.0">
-            <mat-icon matSuffix>propane_tank</mat-icon>
-          </mat-form-field>
-        </div>
-
-      </div>
-    </mat-dialog-content>
-
-    <mat-dialog-actions align="end">
-      <button mat-button (click)="cancelar()">Cancelar</button>
-      
-      <button mat-raised-button color="primary" (click)="salvar()" [disabled]="isSaving || isDuplicate">
-        {{ isSaving ? 'Salvando...' : 'Salvar' }}
-      </button>
-    </mat-dialog-actions>
-  `,
-  providers: [{ provide: MAT_DATE_LOCALE, useValue: 'pt-BR' }]
-})
-export class OilExtractionDialogComponent implements OnInit {
-
-  public dataRegistro: Date = new Date();
-  public turno: number = 1;
-  public qtdCheios: number = 0;
-  
-  public temIncompleto: string = 'nao';
-  public alturaIncompleto: number | null = null;
-  public tanqueGrande: number | null = null;
-  
-  public isSaving: boolean = false;
-  public isEditMode: boolean = false;
-  public currentId: number | null = null;
-
-  // [NOVO] Controle de Duplicidade
-  public isDuplicate: boolean = false;
-  private listaExistente: ExtracaoOleo[] = [];
-
-  constructor(
-    private dialogRef: MatDialogRef<OilExtractionDialogComponent>,
-    private oilService: OilDataService,
-    @Inject(MAT_DIALOG_DATA) public dataRecebida: any // Recebe o objeto { registro, listaExistente }
-  ) {}
-
-  ngOnInit(): void {
-    // Carrega a lista para verificação
-    if (this.dataRecebida && this.dataRecebida.listaExistente) {
-      this.listaExistente = this.dataRecebida.listaExistente;
-    }
-
-    // Modo Edição
-    if (this.dataRecebida && this.dataRecebida.registro) {
-      const dados = this.dataRecebida.registro;
-      this.isEditMode = true;
-      this.currentId = dados.id;
-      this.qtdCheios = dados.tanquesCompletos;
-      this.tanqueGrande = dados.tanqueGrande;
-      this.turno = dados.turno;
-      
-      if (dados.dataExtracao) {
-        this.dataRegistro = new Date(dados.dataExtracao + 'T00:00:00');
-      }
-
-      if (dados.alturaIncompletoCm > 0) {
-        this.temIncompleto = 'sim';
-        this.alturaIncompleto = dados.alturaIncompletoCm;
-      }
-    }
-    
-    // Verifica logo no início (caso a data padrão já tenha registo)
-    this.verificarDuplicidade();
-  }
-
-  // [NOVO] Função chamada sempre que muda Data ou Turno
-  verificarDuplicidade(): void {
-    if (!this.dataRegistro) return;
-
-    const ano = this.dataRegistro.getFullYear();
-    const mes = String(this.dataRegistro.getMonth() + 1).padStart(2, '0');
-    const dia = String(this.dataRegistro.getDate()).padStart(2, '0');
-    const dataString = `${ano}-${mes}-${dia}`;
-
-    // Procura se já existe na lista
-    const duplicado = this.listaExistente.find(item => 
-      item.dataExtracao === dataString && item.turno === this.turno
-    );
-
-    // Se achou um, e NÃO estamos a editar esse mesmo registo -> É DUPLICADO
-    if (duplicado && (!this.isEditMode || duplicado.id !== this.currentId)) {
-      this.isDuplicate = true;
-    } else {
-      this.isDuplicate = false;
-    }
-  }
-
-  salvar(): void {
-    if (this.isDuplicate) {
-      alert("Já existe um registo para esta Data e Turno!");
-      return;
-    }
-    if (this.tanqueGrande === null) {
-      alert("Preencha o nível do Tanque Grande.");
-      return;
-    }
-
-    let alturaFinal = 0;
-    if (this.temIncompleto === 'sim') {
-      if (this.alturaIncompleto === null) {
-        alert("Digite a altura do tanque incompleto.");
-        return;
-      }
-      alturaFinal = Number(this.alturaIncompleto);
-    }
-
-    this.isSaving = true;
-
-    const ano = this.dataRegistro.getFullYear();
-    const mes = String(this.dataRegistro.getMonth() + 1).padStart(2, '0');
-    const dia = String(this.dataRegistro.getDate()).padStart(2, '0');
-    const dataFormatada = `${ano}-${mes}-${dia}`;
-
-    const payload: ExtracaoOleo = {
-      ...(this.isEditMode && this.currentId ? { id: this.currentId } : { tanquesCompletos: 0, alturaIncompletoCm: 0, tanqueGrande: 0, turno: 0, dataExtracao: '' }), // Mock fix
-      tanquesCompletos: Number(this.qtdCheios),
-      alturaIncompletoCm: alturaFinal,
-      tanqueGrande: Number(this.tanqueGrande),
-      turno: Number(this.turno),
-      dataExtracao: dataFormatada
-    };
-    if (this.isEditMode && this.currentId) payload.id = this.currentId;
-
-    const request$ = this.isEditMode && this.currentId
-      ? this.oilService.updateExtraction(this.currentId, payload)
-      : this.oilService.saveExtraction(payload);
-
-    request$.subscribe({
-      next: () => {
-        alert(this.isEditMode ? "Atualizado com sucesso!" : "Salvo com sucesso!");
-        this.dialogRef.close(true);
-      },
-      error: (err) => {
-        console.error('Erro ao salvar:', err);
-        this.isSaving = false;
-        alert("Erro ao salvar. Verifique a conexão.");
-      }
-    });
-  }
-
-  cancelar(): void {
-    this.dialogRef.close(false);
-  }
-}
-
-// --- MAIN COMPONENT: DAILY REPORT ---
 @Component({
   selector: 'app-daily-report',
   standalone: true,
@@ -322,6 +38,19 @@ export class OilExtractionDialogComponent implements OnInit {
 })
 export class DailyReportComponent implements OnInit {
   
+  // --- CONFIGURAÇÃO DE METAS (CONSTANTES FIXAS) ---
+  public readonly TARGET_AMP: number = 120;   // Meta para Amperagem
+  public readonly TARGET_LEVEL: number = 50;  // Meta para Nível Conz
+
+  // Variáveis de Eficiência Individual (Calculadas no Front)
+  public effPre1: number = 0;
+  public effPre2: number = 0;
+  public effPre3: number = 0;
+  public effPre4: number = 0;
+  
+  public effConz1: number = 0;
+  public effConz2: number = 0;
+
   // Dados de Máquinas
   private allReports: SingleReportData[] = [];
   public dadosExibidos: SingleReportData[] = []; 
@@ -343,8 +72,9 @@ export class DailyReportComponent implements OnInit {
   public turnoSelecionado: string = 'todos';
   public ignorarParadas: boolean = false;
   
-  // KPIs Máquinas
-  mediaTem2C = 0; mediaQ90h = 0;
+  // KPIs Máquinas (Médias)
+  mediaTem2C = 0; 
+  mediaQ90h = 0; // Usaremos esta variável para a Eficiência Global calculada
   mediaConz1Nivel = 0; mediaConz2Nivel = 0;
   mediaPre1Amp = 0; mediaPre2Amp = 0; 
   mediaPre3Amp = 0; mediaPre4Amp = 0;
@@ -431,9 +161,8 @@ export class DailyReportComponent implements OnInit {
       this.mediaTanqueGrande = 0;
     }
 
-    // [LÓGICA CORRIGIDA AQUI]
-    // Se houver pelo menos 1 registo (duplicado ou não), permite a edição/exclusão do primeiro.
-    // Isso resolve o "deadlock" onde 2 registros impediam a exclusão.
+    // [CORREÇÃO APLICADA]
+    // Permite selecionar o primeiro item se houver 1 ou mais (resolve bug de duplicatas)
     if (oleoFiltrado.length >= 1) {
       this.registroOleoAtual = oleoFiltrado[0];
     } else {
@@ -552,7 +281,7 @@ export class DailyReportComponent implements OnInit {
     this.calcularKPIs(this.allReports); 
   }
 
-  // --- CÁLCULO DE KPIs DE MÁQUINAS ---
+  // --- CÁLCULO DE KPIs DE MÁQUINAS (COM EFICIÊNCIA) ---
 
   calcularKPIs(reports: SingleReportData[]): void {
     const resetKPIs = () => {
@@ -560,6 +289,9 @@ export class DailyReportComponent implements OnInit {
       this.mediaConz1Nivel = 0; this.mediaConz2Nivel = 0;
       this.mediaPre1Amp = 0; this.mediaPre2Amp = 0; 
       this.mediaPre3Amp = 0; this.mediaPre4Amp = 0;
+      // Zera eficiências
+      this.effPre1 = 0; this.effPre2 = 0; this.effPre3 = 0; this.effPre4 = 0;
+      this.effConz1 = 0; this.effConz2 = 0;
     };
 
     if (!reports || reports.length === 0) {
@@ -593,14 +325,29 @@ export class DailyReportComponent implements OnInit {
       return total / validReports.length;
     };
 
+    // Médias Originais
     this.mediaTem2C = calculateFinalAverage('tem2C');
-    this.mediaQ90h = calculateFinalAverage('q90h');
     this.mediaConz1Nivel = calculateFinalAverage('conz1Nivel');
     this.mediaConz2Nivel = calculateFinalAverage('conz2Nivel');
     this.mediaPre1Amp = calculateFinalAverage('pre1Amp');
     this.mediaPre2Amp = calculateFinalAverage('pre2Amp');
     this.mediaPre3Amp = calculateFinalAverage('pre3Amp');
     this.mediaPre4Amp = calculateFinalAverage('pre4Amp');
+
+    // --- CÁLCULO DE EFICIÊNCIA (NOVO) ---
+    
+    // 1. Amperagem (Base 120)
+    this.effPre1 = (this.mediaPre1Amp / this.TARGET_AMP) * 100;
+    this.effPre2 = (this.mediaPre2Amp / this.TARGET_AMP) * 100;
+    this.effPre3 = (this.mediaPre3Amp / this.TARGET_AMP) * 100;
+    this.effPre4 = (this.mediaPre4Amp / this.TARGET_AMP) * 100;
+
+    // 2. Níveis (Base 50)
+    this.effConz1 = (this.mediaConz1Nivel / this.TARGET_LEVEL) * 100;
+    this.effConz2 = (this.mediaConz2Nivel / this.TARGET_LEVEL) * 100;
+
+    // Eficiência Global (Média das 4 máquinas principais de Amperagem)
+    this.mediaQ90h = (this.effPre1 + this.effPre2 + this.effPre3 + this.effPre4) / 4;
   }
 
   public formatarData(dataString: string): Date | null {
