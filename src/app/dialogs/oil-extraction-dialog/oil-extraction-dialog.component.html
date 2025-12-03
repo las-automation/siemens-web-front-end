@@ -1,26 +1,37 @@
 <h2 mat-dialog-title style="display:flex; align-items:center; gap:10px;">
-  <mat-icon>water_drop</mat-icon> Registro de Óleo
+  <mat-icon>water_drop</mat-icon> 
+  {{ isEditMode ? 'Editar Registo' : 'Novo Registo de Óleo' }}
 </h2>
 
 <mat-dialog-content>
+  
+  @if (isDuplicate) {
+    <div style="background-color: #ffebee; color: #c62828; padding: 10px; border-radius: 4px; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+      <mat-icon>error</mat-icon>
+      <span><strong>Atenção:</strong> Já existe um registo para esta Data e Turno.</span>
+    </div>
+  }
+
   <div style="display:flex; flex-direction:column; gap: 15px; padding-top: 10px;">
 
     <div style="display:flex; gap:15px;">
       <mat-form-field appearance="outline" style="flex:1;">
         <mat-label>Data</mat-label>
-        <input matInput [matDatepicker]="picker" [(ngModel)]="dataRegistro">
+        <input matInput [matDatepicker]="picker" [(ngModel)]="dataRegistro" (dateChange)="verificarDuplicidade()">
         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker #picker></mat-datepicker>
       </mat-form-field>
 
       <mat-form-field appearance="outline" style="flex:1;">
         <mat-label>Turno</mat-label>
-        <mat-select [(ngModel)]="turno">
+        <mat-select [(ngModel)]="turno" (selectionChange)="verificarDuplicidade()">
           <mat-option [value]="1">Turno 1</mat-option>
           <mat-option [value]="2">Turno 2</mat-option>
         </mat-select>
       </mat-form-field>
     </div>
+
+    <mat-divider></mat-divider>
 
     <div>
       <label style="font-weight:500;">Quantos tanques cheios?</label>
@@ -48,9 +59,7 @@
       }
     </div>
 
-    <mat-divider></mat-divider>
-
-    <div>
+    <div style="background-color: #f5f5f5; padding: 10px; border-radius: 8px;">
       <label style="font-weight:500;">Nível do Tanque Grande:</label>
       <mat-form-field appearance="outline" style="width:100%; margin-top:5px;">
         <input matInput type="number" step="0.1" [(ngModel)]="tanqueGrande" placeholder="0.0 a 6.0">
@@ -63,7 +72,8 @@
 
 <mat-dialog-actions align="end">
   <button mat-button (click)="cancelar()">Cancelar</button>
-  <button mat-raised-button color="primary" (click)="salvar()" [disabled]="isSaving">
+  
+  <button mat-raised-button color="primary" (click)="salvar()" [disabled]="isSaving || isDuplicate">
     {{ isSaving ? 'Salvando...' : 'Salvar' }}
   </button>
 </mat-dialog-actions>

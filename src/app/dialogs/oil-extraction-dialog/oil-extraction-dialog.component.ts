@@ -19,18 +19,9 @@ import { ExtracaoOleo } from '../../modal/extracao-oleo';
   selector: 'app-oil-extraction-dialog',
   standalone: true,
   imports: [
-    CommonModule,
-    FormsModule,
-    MatDialogModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatButtonModule,
-    MatSelectModule,
-    MatRadioModule,
-    MatDatepickerModule,
-    MatNativeDateModule,
-    MatIconModule,
-    MatDividerModule
+    CommonModule, FormsModule, MatDialogModule, MatFormFieldModule, MatInputModule,
+    MatButtonModule, MatSelectModule, MatRadioModule, MatDatepickerModule, 
+    MatNativeDateModule, MatIconModule, MatDividerModule
   ],
   templateUrl: './oil-extraction-dialog.component.html',
   styleUrl: './oil-extraction-dialog.component.css',
@@ -38,55 +29,84 @@ import { ExtracaoOleo } from '../../modal/extracao-oleo';
 })
 export class OilExtractionDialogComponent implements OnInit {
 
-  // Dados do Formulário
   public dataRegistro: Date = new Date();
   public turno: number = 1;
   public qtdCheios: number = 0;
   
-  // Controle visual e lógica
   public temIncompleto: string = 'nao';
   public alturaIncompleto: number | null = null;
   public tanqueGrande: number | null = null;
+  
   public isSaving: boolean = false;
-
-  // Variáveis de Controle de Edição
   public isEditMode: boolean = false;
   public currentId: number | null = null;
+
+  // [NOVO] Controle de Duplicidade
+  public isDuplicate: boolean = false;
+  private listaExistente: ExtracaoOleo[] = [];
 
   constructor(
     private dialogRef: MatDialogRef<OilExtractionDialogComponent>,
     private oilService: OilDataService,
-    // [IMPORTANTE] Injetamos os dados passados ao abrir o modal (se houver)
-    @Inject(MAT_DIALOG_DATA) public data: ExtracaoOleo | null
+    @Inject(MAT_DIALOG_DATA) public dataRecebida: any // Recebe o objeto { registro, listaExistente }
   ) {}
 
   ngOnInit(): void {
-    // Se 'data' existir, significa que clicaste em "Editar"
-    if (this.data) {
+    // Carrega a lista para verificação
+    if (this.dataRecebida && this.dataRecebida.listaExistente) {
+      this.listaExistente = this.dataRecebida.listaExistente;
+    }
+
+    // Modo Edição
+    if (this.dataRecebida && this.dataRecebida.registro) {
+      const dados = this.dataRecebida.registro;
       this.isEditMode = true;
-      this.currentId = this.data.id || null;
+      this.currentId = dados.id;
+      this.qtdCheios = dados.tanquesCompletos;
+      this.tanqueGrande = dados.tanqueGrande;
+      this.turno = dados.turno;
       
-      // Preenche os campos com os dados existentes
-      this.qtdCheios = this.data.tanquesCompletos;
-      this.tanqueGrande = this.data.tanqueGrande;
-      this.turno = this.data.turno;
-      
-      // Converte a string 'YYYY-MM-DD' de volta para objeto Date
-      // Adicionamos 'T00:00:00' para garantir que o dia fique correto (evita problemas de fuso horário)
-      if (this.data.dataExtracao) {
-        this.dataRegistro = new Date(this.data.dataExtracao + 'T00:00:00');
+      if (dados.dataExtracao) {
+        this.dataRegistro = new Date(dados.dataExtracao + 'T00:00:00');
       }
 
-      // Lógica do tanque incompleto (se altura > 0, marca como 'sim')
-      if (this.data.alturaIncompletoCm && this.data.alturaIncompletoCm > 0) {
+      if (dados.alturaIncompletoCm > 0) {
         this.temIncompleto = 'sim';
-        this.alturaIncompleto = this.data.alturaIncompletoCm;
+        this.alturaIncompleto = dados.alturaIncompletoCm;
       }
+    }
+    
+    // Verifica logo no início (caso a data padrão já tenha registo)
+    this.verificarDuplicidade();
+  }
+
+  // [NOVO] Função chamada sempre que muda Data ou Turno
+  verificarDuplicidade(): void {
+    if (!this.dataRegistro) return;
+
+    const ano = this.dataRegistro.getFullYear();
+    const mes = String(this.dataRegistro.getMonth() + 1).padStart(2, '0');
+    const dia = String(this.dataRegistro.getDate()).padStart(2, '0');
+    const dataString = `${ano}-${mes}-${dia}`;
+
+    // Procura se já existe na lista
+    const duplicado = this.listaExistente.find(item => 
+      item.dataExtracao === dataString && item.turno === this.turno
+    );
+
+    // Se achou um, e NÃO estamos a editar esse mesmo registo -> É DUPLICADO
+    if (duplicado && (!this.isEditMode || duplicado.id !== this.currentId)) {
+      this.isDuplicate = true;
+    } else {
+      this.isDuplicate = false;
     }
   }
 
   salvar(): void {
-    // Validações básicas
+    if (this.isDuplicate) {
+      alert("Já existe um registo para esta Data e Turno!");
+      return;
+    }
     if (this.tanqueGrande === null) {
       alert("Preencha o nível do Tanque Grande.");
       return;
@@ -94,7 +114,7 @@ export class OilExtractionDialogComponent implements OnInit {
 
     let alturaFinal = 0;
     if (this.temIncompleto === 'sim') {
-      if (this.alturaIncompleto === null || this.alturaIncompleto === undefined) {
+      if (this.alturaIncompleto === null) {
         alert("Digite a altura do tanque incompleto.");
         return;
       }
@@ -103,15 +123,12 @@ export class OilExtractionDialogComponent implements OnInit {
 
     this.isSaving = true;
 
-    // Ajuste de Data para garantir formato correto YYYY-MM-DD local
     const ano = this.dataRegistro.getFullYear();
     const mes = String(this.dataRegistro.getMonth() + 1).padStart(2, '0');
     const dia = String(this.dataRegistro.getDate()).padStart(2, '0');
     const dataFormatada = `${ano}-${mes}-${dia}`;
 
-    // Monta o objeto para enviar
     const payload: ExtracaoOleo = {
-      // Se for edição, mantém o ID original
       ...(this.isEditMode && this.currentId ? { id: this.currentId } : {}),
       tanquesCompletos: Number(this.qtdCheios),
       alturaIncompletoCm: alturaFinal,
@@ -120,28 +137,24 @@ export class OilExtractionDialogComponent implements OnInit {
       dataExtracao: dataFormatada
     };
 
-    // Decide qual método chamar no serviço (POST para novo, PUT para editar)
     const request$ = this.isEditMode && this.currentId
-      ? this.oilService.updateExtraction(this.currentId, payload) // PUT
-      : this.oilService.saveExtraction(payload); // POST
+      ? this.oilService.updateExtraction(this.currentId, payload)
+      : this.oilService.saveExtraction(payload);
 
     request$.subscribe({
       next: () => {
         alert(this.isEditMode ? "Atualizado com sucesso!" : "Salvo com sucesso!");
-        this.dialogRef.close(true); // Retorna 'true' para avisar que salvou
+        this.dialogRef.close(true);
       },
       error: (err) => {
         console.error('Erro ao salvar:', err);
-        const status = err.status || 'Desconhecido';
-        if (status === 403) alert(`Acesso Negado (403). Verifique o login.`);
-        else alert(`Erro ao processar dados. Código: ${status}`);
-        
         this.isSaving = false;
+        alert("Erro ao salvar. Verifique a conexão.");
       }
     });
   }
 
   cancelar(): void {
-    this.dialogRef.close(false); // Retorna 'false' (não salvou)
+    this.dialogRef.close(false);
   }
 }

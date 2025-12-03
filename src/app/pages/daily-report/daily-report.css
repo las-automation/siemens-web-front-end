@@ -5,6 +5,53 @@
   margin: 0 auto;
   background-color: #f8f9fa; /* Fundo cinza muito suave para a página */
   min-height: 100vh;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+/* --- SEÇÃO DE ÓLEO --- */
+.oil-section-highlight {
+  margin-bottom: 30px;
+}
+
+.oil-card-container {
+  display: flex;
+  gap: 20px;
+  align-items: stretch;
+}
+
+/* Estilo Específico do Card de Óleo (Laranja) */
+.oil-kpi {
+  flex: 3;
+  /* Gradiente suave para destacar */
+  background: linear-gradient(to right, #ffffff, #fff8e1); 
+  border-left: 6px solid #ff9800; /* Laranja forte */
+}
+
+/* Área de Botões do Óleo */
+.oil-actions {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+  min-width: 220px;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.edit-actions button {
+  flex: 1;
+}
+
+.help-text {
+  text-align: center;
+  color: #888;
+  font-size: 0.8rem;
+  margin-top: 5px;
+  font-style: italic;
 }
 
 /* --- GRID DE KPIs (Cards) --- */
@@ -27,19 +74,13 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+  text-align: center;
 }
 
 /* Efeito ao passar o mouse no Card */
 .kpi-card:hover {
   transform: translateY(-4px); /* Levanta ligeiramente */
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-/* DESTAQUE DO CARD DE ÓLEO */
-.oil-card-style {
-  /* Pode adicionar um fundo leve para destacar */
-  background-color: #fff8e1; 
-  border-left: 4px solid #ff9800; /* Laranja forte */
 }
 
 .kpi-title {
@@ -55,7 +96,7 @@
   font-size: 2.5rem; /* Maior destaque */
   font-weight: 700;
   margin: 12px 0 4px 0;
-  color: #005a9c; /* Azul Siemens */
+  color: #005a9c; /* Azul Siemens (Padrão) - muda dinamicamente na eficiência */
   line-height: 1.1;
 }
 
@@ -63,6 +104,37 @@
   margin: 0;
   color: #9aa0a6;
   font-size: 0.8rem;
+}
+
+/* --- BADGES DE EFICIÊNCIA (NOVO) --- */
+.machine-eff {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 12px; /* Espaçamento do valor principal */
+  font-size: 0.85rem;
+  padding: 6px 12px;
+  border-radius: 20px; /* Mais arredondado tipo "chip" */
+  font-weight: 500;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  border: 1px solid transparent;
+}
+
+/* Verde para boa eficiência (>= 80%) */
+.machine-eff.good {
+  color: #1b5e20; /* Verde escuro texto */
+  background-color: #e8f5e9; /* Verde claro fundo */
+  border-color: #c8e6c9;
+}
+
+/* Vermelho para baixa eficiência (< 80%) */
+.machine-eff.bad {
+  color: #b71c1c; /* Vermelho escuro texto */
+  background-color: #ffebee; /* Vermelho claro fundo */
+  border-color: #ffcdd2;
 }
 
 /* --- FILTROS E AÇÕES --- */
@@ -100,6 +172,10 @@
   gap: 12px;
   align-items: center;
   margin-left: auto; /* Empurra os botões para a direita se houver espaço */
+}
+
+.print-button {
+  margin-left: 10px;
 }
 
 /* Checkbox de Filtro Extra */
@@ -211,6 +287,7 @@ table {
   text-align: right;
   font-family: 'Roboto Mono', monospace; /* Fonte monoespaçada para números alinharem */
   font-weight: 500;
+  padding-right: 24px !important;
 }
 
 /* Mensagem de Tabela Vazia */
@@ -266,7 +343,8 @@ table {
   app-header,
   app-sidebar,
   button,
-  .loading-message {
+  .loading-message,
+  .oil-actions { /* Esconde botões de ação na impressão */
     display: none !important;
   }
 
@@ -329,4 +407,4 @@ table {
   h2 {
     display: none; /* Oculta título "Exibindo X registos" */
   }
-}
+} 

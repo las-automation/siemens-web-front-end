@@ -13,9 +13,8 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatDividerModule } from '@angular/material/divider'; // [NOVO] Import necessário
+import { MatDividerModule } from '@angular/material/divider';
 
-// Serviços e Modelos
 import { SingleReportData } from '../../modal/single-report-data/single-report-data'; 
 import { ReportDataService } from '../../services/report-data'; 
 import { OilDataService } from '../../services/oil-data.service'; 
@@ -29,8 +28,7 @@ import { OilExtractionDialogComponent } from '../../dialogs/oil-extraction-dialo
     CommonModule, FormsModule, MatCardModule, MatIconModule, 
     MatFormFieldModule, MatInputModule, MatButtonModule, MatTableModule,
     MatDatepickerModule, MatNativeDateModule, MatSelectModule,
-    MatCheckboxModule, MatTooltipModule, MatDialogModule,
-    MatDividerModule // [NOVO] Adicionado aqui
+    MatCheckboxModule, MatTooltipModule, MatDialogModule, MatDividerModule
   ],
   templateUrl: './daily-report.html',
   styleUrl: './daily-report.css',
@@ -40,32 +38,46 @@ import { OilExtractionDialogComponent } from '../../dialogs/oil-extraction-dialo
 })
 export class DailyReportComponent implements OnInit {
   
+  // --- CONFIGURAÇÃO DE METAS (CONSTANTES FIXAS) ---
+  public readonly TARGET_AMP: number = 120;   // Meta para Amperagem
+  public readonly TARGET_LEVEL: number = 50;  // Meta para Nível Conz
+
+  // Variáveis de Eficiência Individual (Calculadas no Front)
+  public effPre1: number = 0;
+  public effPre2: number = 0;
+  public effPre3: number = 0;
+  public effPre4: number = 0;
+  
+  public effConz1: number = 0;
+  public effConz2: number = 0;
+
+  // Dados de Máquinas
   private allReports: SingleReportData[] = [];
   public dadosExibidos: SingleReportData[] = []; 
   
-  // Variáveis para o Óleo
+  // Dados de Óleo
   public todosRegistosOleo: ExtracaoOleo[] = [];
   public totalTanquesCheios: number = 0;
+  public totalIncompleto: number = 0;   
+  public mediaTanqueGrande: number = 0; 
   public registroOleoAtual: ExtracaoOleo | null = null; // Para edição
 
+  // Estados da Tela
   public isLoading: boolean = true;
   public searchPerformed: boolean = false;
 
+  // Filtros
   public startDate: Date | null = null;
   public endDate: Date | null = null;
-
   public turnoSelecionado: string = 'todos';
   public ignorarParadas: boolean = false;
   
-  // KPIs
-  mediaTem2C = 0;
-  mediaQ90h = 0;
-  mediaConz1Nivel = 0;
-  mediaConz2Nivel = 0;
-  mediaPre1Amp = 0;
-  mediaPre2Amp = 0;
-  mediaPre3Amp = 0;
-  mediaPre4Amp = 0;
+  // KPIs Máquinas (Médias)
+  mediaTem2C = 0; 
+  mediaQ90h = 0; // Usaremos esta variável para a Eficiência Global calculada
+  mediaConz1Nivel = 0; mediaConz2Nivel = 0;
+  mediaPre1Amp = 0; mediaPre2Amp = 0; 
+  mediaPre3Amp = 0; mediaPre4Amp = 0;
 
   // Paginação
   public currentPage: number = 1;
@@ -85,8 +97,10 @@ export class DailyReportComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // 1. Carrega dados de Óleo
     this.carregarDadosOleo();
 
+    // 2. Carrega dados de Máquinas
     this.reportService.loadAllReports().subscribe({
       next: (reports) => {
         this.allReports = reports.sort((a, b) => b.excelId - a.excelId);
@@ -118,6 +132,7 @@ export class DailyReportComponent implements OnInit {
   filtrarOleo(): void {
     let oleoFiltrado = this.todosRegistosOleo;
 
+    // Filtro de Data
     if (this.startDate && this.endDate) {
       const inicio = new Date(this.startDate); inicio.setHours(0,0,0,0);
       const fim = new Date(this.endDate); fim.setHours(23,59,59,999);
@@ -128,16 +143,27 @@ export class DailyReportComponent implements OnInit {
       });
     }
 
+    // Filtro de Turno
     if (this.turnoSelecionado === 'turno1') {
       oleoFiltrado = oleoFiltrado.filter(item => item.turno === 1);
     } else if (this.turnoSelecionado === 'turno2') {
       oleoFiltrado = oleoFiltrado.filter(item => item.turno === 2);
     }
 
+    // Cálculos de KPIs
     this.totalTanquesCheios = oleoFiltrado.reduce((acc, curr) => acc + curr.tanquesCompletos, 0);
+    this.totalIncompleto = oleoFiltrado.reduce((acc, curr) => acc + (curr.alturaIncompletoCm || 0), 0);
+    
+    if (oleoFiltrado.length > 0) {
+      const somaGrande = oleoFiltrado.reduce((acc, curr) => acc + (curr.tanqueGrande || 0), 0);
+      this.mediaTanqueGrande = somaGrande / oleoFiltrado.length;
+    } else {
+      this.mediaTanqueGrande = 0;
+    }
 
-    // Lógica para habilitar botão de edição
-    if (oleoFiltrado.length === 1 && this.turnoSelecionado !== 'todos') {
+    // [CORREÇÃO APLICADA]
+    // Permite selecionar o primeiro item se houver 1 ou mais (resolve bug de duplicatas)
+    if (oleoFiltrado.length >= 1) {
       this.registroOleoAtual = oleoFiltrado[0];
     } else {
       this.registroOleoAtual = null;
@@ -147,7 +173,11 @@ export class DailyReportComponent implements OnInit {
   abrirRegistroOleo(): void {
     const dialogRef = this.dialog.open(OilExtractionDialogComponent, {
       width: '400px',
-      disableClose: true
+      disableClose: true,
+      data: { 
+        registro: null,
+        listaExistente: this.todosRegistosOleo 
+      }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -161,7 +191,10 @@ export class DailyReportComponent implements OnInit {
     const dialogRef = this.dialog.open(OilExtractionDialogComponent, {
       width: '400px',
       disableClose: true,
-      data: this.registroOleoAtual
+      data: {
+        registro: this.registroOleoAtual,
+        listaExistente: this.todosRegistosOleo
+      }
     });
 
     dialogRef.afterClosed().subscribe(result => {
@@ -183,7 +216,7 @@ export class DailyReportComponent implements OnInit {
     }
   }
 
-  // --- LÓGICA DE FILTROS ---
+  // --- LÓGICA DE FILTROS DE MÁQUINAS ---
 
   filtrarRelatorios(): void {
     if (!this.startDate || !this.endDate) {
@@ -240,7 +273,7 @@ export class DailyReportComponent implements OnInit {
     this.turnoSelecionado = 'todos';
     this.ignorarParadas = false;
 
-    this.filtrarOleo();
+    this.filtrarOleo(); // Reseta óleo
 
     this.totalPages = Math.ceil(this.allReports.length / this.itemsPerPage);
     this.irParaPagina(1); 
@@ -248,7 +281,7 @@ export class DailyReportComponent implements OnInit {
     this.calcularKPIs(this.allReports); 
   }
 
-  // --- CÁLCULO DE KPIs ---
+  // --- CÁLCULO DE KPIs DE MÁQUINAS (COM EFICIÊNCIA) ---
 
   calcularKPIs(reports: SingleReportData[]): void {
     const resetKPIs = () => {
@@ -256,6 +289,9 @@ export class DailyReportComponent implements OnInit {
       this.mediaConz1Nivel = 0; this.mediaConz2Nivel = 0;
       this.mediaPre1Amp = 0; this.mediaPre2Amp = 0; 
       this.mediaPre3Amp = 0; this.mediaPre4Amp = 0;
+      // Zera eficiências
+      this.effPre1 = 0; this.effPre2 = 0; this.effPre3 = 0; this.effPre4 = 0;
+      this.effConz1 = 0; this.effConz2 = 0;
     };
 
     if (!reports || reports.length === 0) {
@@ -265,6 +301,7 @@ export class DailyReportComponent implements OnInit {
 
     let reportsValidos = reports;
 
+    // Filtro de Paradas (< 30A em 2+ máquinas)
     if (this.ignorarParadas) {
       reportsValidos = reports.filter(r => {
         let maquinasParadas = 0;
@@ -288,14 +325,29 @@ export class DailyReportComponent implements OnInit {
       return total / validReports.length;
     };
 
+    // Médias Originais
     this.mediaTem2C = calculateFinalAverage('tem2C');
-    this.mediaQ90h = calculateFinalAverage('q90h');
     this.mediaConz1Nivel = calculateFinalAverage('conz1Nivel');
     this.mediaConz2Nivel = calculateFinalAverage('conz2Nivel');
     this.mediaPre1Amp = calculateFinalAverage('pre1Amp');
     this.mediaPre2Amp = calculateFinalAverage('pre2Amp');
     this.mediaPre3Amp = calculateFinalAverage('pre3Amp');
     this.mediaPre4Amp = calculateFinalAverage('pre4Amp');
+
+    // --- CÁLCULO DE EFICIÊNCIA (NOVO) ---
+    
+    // 1. Amperagem (Base 120)
+    this.effPre1 = (this.mediaPre1Amp / this.TARGET_AMP) * 100;
+    this.effPre2 = (this.mediaPre2Amp / this.TARGET_AMP) * 100;
+    this.effPre3 = (this.mediaPre3Amp / this.TARGET_AMP) * 100;
+    this.effPre4 = (this.mediaPre4Amp / this.TARGET_AMP) * 100;
+
+    // 2. Níveis (Base 50)
+    this.effConz1 = (this.mediaConz1Nivel / this.TARGET_LEVEL) * 100;
+    this.effConz2 = (this.mediaConz2Nivel / this.TARGET_LEVEL) * 100;
+
+    // Eficiência Global (Média das 4 máquinas principais de Amperagem)
+    this.mediaQ90h = (this.effPre1 + this.effPre2 + this.effPre3 + this.effPre4) / 4;
   }
 
   public formatarData(dataString: string): Date | null {
