@@ -39,8 +39,8 @@ import { OilExtractionDialogComponent } from '../../dialogs/oil-extraction-dialo
 export class DailyReportComponent implements OnInit {
   
   // --- CONFIGURAÇÃO DE METAS (CONSTANTES FIXAS) ---
-  public readonly TARGET_AMP: number = 120;   // Meta para Amperagem
-  public readonly TARGET_LEVEL: number = 50;  // Meta para Nível Conz
+  public readonly TARGET_AMP: number = 100;   // Meta para Amperagem
+  public readonly TARGET_LEVEL: number = 45;  // Meta para Nível Conz
 
   // Variáveis de Eficiência Individual (Calculadas no Front)
   public effPre1: number = 0;
