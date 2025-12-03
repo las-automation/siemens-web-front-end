@@ -10,6 +10,7 @@ export class OilDataService {
   
   // URL do Backend
   private readonly API_URL = 'https://siemens-web-back-end.onrender.com/deojuvante/extracao-oleo';
+  //private readonly API_URL = 'http://localhost:8080/deojuvante/extracao-oleo';
 
   constructor(private http: HttpClient) { }
 

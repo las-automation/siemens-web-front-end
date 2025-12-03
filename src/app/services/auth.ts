@@ -23,6 +23,7 @@ export class AuthService {
     console.log('A tentar fazer login com:', { username, password });
 
     try {
+      //const response = await fetch ('http://localhost:8080/deojuvante/login', {
       const response = await fetch('https://siemens-web-back-end.onrender.com/deojuvante/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
